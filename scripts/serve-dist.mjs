@@ -6,7 +6,11 @@ import { resolve, extname, sep } from 'node:path'
 const root = resolve('dist')
 const prefix = '/explorer/'
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.ttf': 'font/ttf', '.md': 'text/plain; charset=utf-8', '.png': 'image/png' }
-createServer(async (request, response) => {
+// The browser tests keep the fixed port 5191. The screenshot script asks for port 0 and reads the
+// printed URL, so a second session never shares one host.
+const requestedPort = Number.parseInt(process.env.PORT ?? '', 10)
+const port = Number.isInteger(requestedPort) && requestedPort >= 0 ? requestedPort : 5191
+const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname)
     if (!pathname.startsWith(prefix)) { response.writeHead(404).end(); return }
@@ -18,4 +22,9 @@ createServer(async (request, response) => {
   } catch {
     response.writeHead(404).end()
   }
-}).listen(5191, '127.0.0.1', () => console.log('Production test: http://127.0.0.1:5191/explorer/'))
+})
+server.listen(port, '127.0.0.1', () => {
+  const address = server.address()
+  const boundPort = address && typeof address === 'object' ? address.port : port
+  console.log(`Production test: http://127.0.0.1:${boundPort}/explorer/`)
+})

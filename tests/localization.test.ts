@@ -3,7 +3,8 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { nextTick } from 'vue'
 import { i18n, locale, setLocale, t } from '../src/i18n'
-import { getHelpMarkdown } from '../src/data/helpContent'
+import { getHelpMarkdown, HELP_README_FILES } from '../src/data/helpContent'
+import type { LocaleCode } from '../src/i18n'
 import { renderMarkdown } from '../src/core/markdown'
 import { loadDemoFile, setActiveSource } from '../src/actions'
 import { state } from '../src/store'
@@ -90,19 +91,68 @@ describe('external language catalogs', () => {
 })
 
 describe('localized help', () => {
+  const screenshots = ['workspace', 'new-block', 'variable-editor', 'type-picker', 'call-browser']
+
   for (const language of languages) {
-    it(`preserves technical identifiers and includes five ${language} screenshots`, () => {
+    it(`serves the ${language} README with technical identifiers and its own screenshots`, () => {
       const text = getHelpMarkdown(language)
+      expect(text).toBe(readFileSync(HELP_README_FILES[language as LocaleCode], 'utf8'))
       for (const term of ['PositionPin', 'variableInit', 'topologicalAddress', '33002519.20', '35006144.27',
         'm580_fb_get_metadata', 'm580_fb_set_source', 'm580_get_help', 'Ctrl+S', 'file://']) expect(text).toContain(term)
-      for (const image of ['workspace', 'variable-editor', 'type-picker', 'call-browser', 'new-block']) {
-        expect(text).toContain(`images/${language}/${image}.png`)
+      for (const image of screenshots) {
+        expect(text).toContain(`docs/images/${language}/${image}.png`)
       }
       const html = renderMarkdown(text)
-      expect((html.match(/<img /g) ?? []).length).toBe(5)
+      for (const image of screenshots) {
+        expect(html).toContain(`images/${language}/${image}.png`)
+      }
+      // 帮助抽屉只加载随应用发布的截图，任何其他地址都退化为替代文本。
+      const sources = [...html.matchAll(/<img [^>]*src="([^"]+)"/g)].map((match) => match[1])
+      expect(sources).toHaveLength(screenshots.length)
+      for (const source of sources) {
+        expect(source).toMatch(new RegExp(`docs/images/${language}/[a-z0-9-]+\\.png$`))
+      }
       expect(html).not.toContain('src="javascript:')
     })
   }
+
+  it('renders the README language links as in-page language switches', () => {
+    for (const language of languages) {
+      const html = renderMarkdown(getHelpMarkdown(language))
+      for (const other of languages) {
+        if (other === language) continue
+        expect(html, `${language}: ${other}`).toContain(`data-help-language="${other}"`)
+      }
+      expect(html).not.toMatch(/href="README[^"]*\.md/)
+    }
+  })
+
+  it('routes README document links to the readable repository source', () => {
+    const root = 'https://github.com/lilixxs/M580_FB_Explorer/blob/main/'
+    for (const language of languages) {
+      const html = renderMarkdown(getHelpMarkdown(language))
+      for (const document of ['CONTRIBUTING.md', 'CONTRIBUTING.en.md', 'docs/requirements.md']) {
+        expect(html, `${language}: ${document}`).toContain(`${root}${document}`)
+      }
+      // 相对仓库文档在 Pages 子路径下不存在，不得保留为链接地址。
+      expect(html).not.toMatch(/href="(?:\.\/)?(?:CONTRIBUTING|docs\/)/)
+    }
+  })
+
+  it('switches the help text with the interface language and keeps the edited document', async () => {
+    setLocale('zh-CN')
+    loadDemoFile(0)
+    setActiveSource('(* keep me *)')
+    const doc = state.doc
+    const simplified = state.helpMarkdown
+    setLocale('ja')
+    await nextTick()
+    expect(state.helpMarkdown).toBe(getHelpMarkdown('ja'))
+    expect(state.helpMarkdown).not.toBe(simplified)
+    expect(state.doc).toBe(doc)
+    expect(state.doc!.sections[0].stSource).toBe('(* keep me *)')
+    expect(state.dirty).toBe(true)
+  })
 
   it('does not create remote image requests from untrusted markdown', () => {
     expect(renderMarkdown('![x](https://example.invalid/tracker.png)')).not.toContain('<img')

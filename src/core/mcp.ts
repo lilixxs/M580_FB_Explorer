@@ -188,7 +188,7 @@ export const MCP_TOOL_SCHEMAS: McpToolSchema[] = [
   },
   {
     name: 'm580_get_help',
-    description: '返回帮助文档原文（HELP.md）',
+    description: '返回当前界面语言的 README 正文',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false }
   },
   {

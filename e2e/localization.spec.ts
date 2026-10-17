@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const languages = ['zh-CN', 'en', 'zh-TW', 'ja', 'ko']
+const helpImages = ['workspace', 'new-block', 'variable-editor', 'type-picker', 'call-browser']
 const messages = (language: string) => JSON.parse(readFileSync(resolve(`src/locales/app.${language}.json`), 'utf8'))
 
 for (const language of languages) {
@@ -54,15 +55,47 @@ for (const language of languages) {
     await page.keyboard.press('Escape')
 
     await page.getByTestId('open-help').click()
-    await expect(page.locator('.markdown img')).toHaveCount(5)
-    for (const image of await page.locator('.markdown img').all()) {
-      const src = await image.getAttribute('src')
-      expect(src).toContain(`images/${language}/`)
-      expect((await request.get(src!)).ok()).toBe(true)
+    const help = page.locator('.markdown')
+    // 帮助渲染当前语言的 README，并只加载本语言的五张截图。
+    for (const image of helpImages) {
+      const screenshot = help.locator(`img[src*="images/${language}/${image}.png"]`)
+      await expect(screenshot).toHaveCount(1)
+      expect((await request.get((await screenshot.getAttribute('src'))!)).ok()).toBe(true)
     }
+    const sources = await help.locator('img').evaluateAll(nodes => nodes.map(node => node.getAttribute('src') ?? ''))
+    expect(sources).toHaveLength(helpImages.length)
+    for (const source of sources) expect(source).toMatch(/docs\/images\/(?:zh-CN|en|zh-TW|ja|ko)\/[a-z0-9-]+\.png$/)
     expect(errors).toEqual([])
   })
 }
+
+test('README language links switch the interface language and keep the edited document', async ({ page }) => {
+  await page.goto('./')
+  await page.getByTestId('demo-0').click()
+  await expect(page.locator('.monaco-editor')).toBeVisible()
+  await page.evaluate(() => window.__M580_MCP_BRIDGE__!.callTool('m580_fb_set_source', { source: '(* keep me *)' }))
+  const source = async () => {
+    const result = await page.evaluate(() => window.__M580_MCP_BRIDGE__!.callTool('m580_fb_get_source', {}))
+    return (result.result as { source: string }).source
+  }
+  expect(await source()).toBe('(* keep me *)')
+
+  await page.getByTestId('open-help').click()
+  const help = page.locator('.markdown')
+  await expect(help.locator('img[src*="images/zh-CN/"]').first()).toBeVisible()
+  await help.locator('[data-help-language="en"]').click()
+
+  // 链接切换语言并换成英文 README，不打开 Markdown 文件。
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(help.locator('img[src*="images/en/"]').first()).toBeVisible()
+  await expect(help.locator('[data-help-language="zh-CN"]')).toBeVisible()
+  await expect(page).toHaveURL(/\/explorer\/$/)
+
+  // 文档、源码和「有修改」标记保持不变。
+  expect(await source()).toBe('(* keep me *)')
+  await expect(page.locator('.doc-meta')).toContainText(messages('en').dirty)
+  await expect(page.getByTestId('language-select')).toHaveValue('en')
+})
 
 test('switching languages preserves an edited Monaco model and the undo stack', async ({ page }) => {
   await page.goto('./')

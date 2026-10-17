@@ -1,140 +1,253 @@
 # M580_FB_Explorer
 
-浏览器端的 Schneider M580 Control Expert 交换文件查看与编辑工具。
+[简体中文](README.md) | [English](README.en.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
-[English](README.en.md)
+浏览器端的 Schneider M580 Control Expert 交换文件查看与编辑工具。本文也是界面帮助的唯一正文来源。
 
-## 功能
+在线使用：<https://lilixxs.github.io/M580_FB_Explorer/>
 
-- 导入 `.xdb`、`.xst` 和 `.xsy` 文件。
-- 解析功能块元信息、变量和程序段。
-- 按 `IN`、`OUT`、`IN_OUT`、`PUBLIC`、`PRIVATE` 和 `GLOBAL` 管理变量。
-- 搜索、折叠、新增、修改、删除和调整变量顺序。
-- 使用 Monaco Editor 编辑 ST 程序段。
-- 提供 ST 搜索、替换、格式化、跳转、模板插入和自动完成。
-- 提取函数、功能块实例和未知调用。
-- 显示功能块引脚调用视图。
-- 导出 `.xdb` 文件。
-- 提供帮助抽屉和本地 MCP Bridge 接口桩。
-- 提供基础类型、自定义类型和数组类型快速选择。
-- 分列显示变量类型与地址，并固定当前变量分类标题。
-- 提供两栏函数/功能块调用弹窗，并从 JSON 加载函数库和类型数据。
-- 联动定位代码、变量引用、变量列表和功能块引脚。
-- 使用 Vue I18n 切换简体中文、英文、繁体中文、日文和韩文。
-- 新建空白功能块。确认或取消功能块名称与注释的草稿。
+网页在浏览器中解析 Control Expert 交换文件。网页不上传导入文件。网页不连接 PLC。
 
-导入和导出统一使用顶栏按钮。
+本文截图只使用内置示例。
 
-保存并重新解析会清除当前程序段的「未保存」标记。顶栏「有修改」会保留到导出文件。
+## 1. 界面语言
 
-函数库位于 `src/data/functionLibraries/`。新增库和修改已有内容的方法见 [贡献指南](CONTRIBUTE.md#函数库与编辑器调用内容维护)。基础快照不代表完整官方手册。
+顶栏提供语言切换入口。可选简体中文、英文、繁体中文、日文和韩文。
 
-## 界面
+浏览器允许本地存储时，网页记住语言选择。
 
-### 工作区
+切换语言不清空文档、源码和未导出的修改。
 
-工作区将功能块信息、调用列表、引脚图、变量列表和 ST 编辑器放在同一页面。
+界面操作与提示使用当前语言。PLC 标识符、用户文件内容和 XML 格式值不随界面语言改变。
+
+已生成的状态消息和解析警告保留生成时的语言。后续操作使用新选定的语言。
+
+## 2. 导入文件
 
 ![工作区](docs/images/zh-CN/workspace.png)
 
-左侧显示文件信息、程序段调用和引脚视图。右侧显示变量表和程序段编辑器。分隔条支持拖动、双击复位和键盘调整。
+点击顶栏「导入文件」选择 .xdb、.xst 或 .xsy 文件。也可以把文件拖到窗口中。
 
-### 变量编辑
+点击顶栏示例按钮可以载入内置示例。
 
-变量编辑器提供名称、类型、地址、默认值、初值和注释字段。
+导入和导出入口只在顶栏。左上面板不提供导入和导出按钮。
 
-![变量编辑](docs/images/zh-CN/variable-editor.png)
+左上区域显示文件信息、程序段列表和解析警告入口。
 
-网页在保存前检查变量名、重复变量、分类和地址约束。网页不会覆盖用户原始文件。
+点击程序段后，右下编辑器显示对应内容。
 
-点击「选择类型」可以选择基础类型、自定义类型和数组。
+每次只编辑一个文档。重新导入会替换当前文档。请先导出修改后的文件。
+
+导入成功后，网页清空搜索词和折叠状态。
+
+网页支持单个 FBSource 的 .xdb 文件、程序段 .xst 文件和变量表 .xsy 文件。多功能块作用域暂不合并。对于无法安全处理的结构，网页拒绝导入并显示原因。
+
+非 ST 程序段显示只读 XML 原文。网页不把图形语言转换为 ST。
+
+## 3. 新建功能块
+
+![新建功能块](docs/images/zh-CN/new-block.png)
+
+点击顶栏「新建功能块」打开对话框。
+
+在对话框中输入功能块名称，并可填写注释。
+
+名称必须符合本项目的 IEC 标识符规则。
+
+确认后，网页创建空变量表和一个空 ST 程序段。
+
+当前文档含未导出修改时，替换前网页征求确认。
+
+新建文档使用现有变量编辑、ST 编辑、保存和 .xdb 导出流程。
+
+## 4. 元信息编辑
+
+功能块名称与注释使用草稿编辑。
+
+输入新值后，点击「确认」才写入文档。
+
+点击「取消」恢复原值。
+
+草稿尚未确认时，面板显示「元信息草稿尚未确认」。
+
+## 5. 布局与引脚视图
+
+左右分栏默认占 34% 和 66%。右上变量列表默认占高度的 1/3。右下程序段编辑器默认占高度的 2/3。
+
+左栏依次显示元信息、调用列表和引脚调用视图。拖动分隔条可以调整各面板尺寸。双击分隔条可以复位。聚焦分隔条后，可以按方向键微调尺寸。
+
+网页在窄屏幕上改为垂直排列。面板内部的表格支持横向滚动。浏览器允许本地存储时，网页记录面板尺寸。
+
+引脚视图显示 IN、OUT 和 IN_OUT。IN_OUT 使用虚线标识。PRIVATE、PUBLIC 和 GLOBAL 不绘制为引脚。EN 和 ENO 仅作为系统引脚示意。点击引脚可以定位右上变量。
+
+使用引脚面板的加减按钮可以缩放视图。点击引脚时，网页清空变量搜索词并展开对应分组。
+
+点击引脚或变量行后，编辑器定位该变量的使用位置。调用面板显示相关变量引用。没有引用的变量不触发无关跳转。
+
+## 6. 变量管理
+
+![变量编辑器](docs/images/zh-CN/variable-editor.png)
+
+变量按 IN、OUT、IN_OUT、PUBLIC、PRIVATE 和 GLOBAL 分组。GLOBAL 对应 dataBlock 全局变量。
+
+在搜索框输入变量名、类型、地址、初值或注释。搜索时自动展开匹配分组。点击分组标题可以折叠分组。
+
+点击「新增」创建变量。点击「改」修改变量。点击「删」后确认删除。点击上下箭头调整同类变量顺序。引脚序号 PositionPin 按顺序重新计算。
 
 ![类型选择](docs/images/zh-CN/type-picker.png)
 
-### 插入调用
+点击「选择类型」可以点选基础类型。也可以输入自定义类型。数组模式提供元素类型、下界和上界。生成结果使用 ARRAY[下界..上界] OF 类型。
 
-编辑器工具栏和右键菜单提供「函数/功能块调用」。弹窗支持函数库分组、搜索和实例选择。
+变量表分别显示类型和地址。滚动变量表时，当前分组标题吸附在表格顶端。
 
-![调用浏览器](docs/images/zh-CN/call-browser.png)
+变量名必须以英文字母或下划线开头。其余字符只允许英文字母、数字和下划线。变量名不得在忽略大小写后重复。EN 和 ENO 不能新增为普通引脚。
 
-### 帮助与 MCP
+32 位类型绑定 %MW 时必须使用偶数地址。当前导出器会把无后缀的奇数 %MW 地址改为下一个偶数地址，并显示转换警告。请先在变量对话框中确认地址，避免导出时改变映射。
 
-帮助抽屉说明文件格式、编辑器操作、导出规则和 MCP Bridge 工具。
+## 7. ST 调用解析
 
-帮助内容和截图随界面语言切换。语言选择保存在浏览器中。
+![调用浏览](docs/images/zh-CN/call-browser.png)
 
-MCP Bridge 只提供当前网页的本地调用接口。项目不默认连接远程服务。
+左中列表显示函数和功能块调用。列表保留未知调用，不把未知名称视为系统函数。解析器忽略字符串和注释中的伪调用。
 
-## 快速开始
+点击调用项后，编辑器跳转到对应行列。点击「刷新解析」重新解析代码。保存程序段也会刷新调用列表。
 
-要求 Node.js `22.12` 或更高的受支持版本。
+调用面板同时提供普通变量引用。引用分析忽略注释、字符串和命名参数的形参名。点击引用会同步定位代码、变量行和对应引脚。编辑器点击变量也会更新选中状态。
+
+调用解析不等于语法编译。网页不检查所有函数签名，也不执行 ST 代码。
+
+## 8. 编辑器操作
+
+| 操作 | 入口 |
+| --- | --- |
+| 查找 | Ctrl+F、工具栏、右键菜单 |
+| 替换 | Ctrl+H、工具栏、右键菜单 |
+| 行列跳转 | Ctrl+G 或行:列输入框 |
+| 格式化 | Shift+Alt+F、工具栏、右键菜单 |
+| 插入 IF / FOR / WHILE | 工具栏、右键菜单 |
+| 函数/功能块调用 | 工具栏、右键菜单 |
+| 保存并解析 | Ctrl+S 或保存按钮 |
+| 自动完成 | 输入时提示或 Ctrl+空格 |
+
+自动完成包含关键字、当前变量、常用函数和语句模板。格式化器只整理已支持的 ST 结构，不替代完整的 IEC 61131-3 编译器。
+
+编辑器保存只写入页面内存。保存不修改磁盘上的原始文件。请点击顶栏「导出 .xdb」下载修改后的文件。
+
+保存并重新解析后，当前程序段的「未保存」标记消失。顶栏「有修改」表示尚未导出，不会因保存程序段而消失。
+
+「函数/功能块调用」弹窗分为分类栏和条目栏。弹窗支持搜索、函数、功能块、当前文档程序段和自定义调用。插入位置为打开弹窗时的编辑器选区或光标。
+
+EFB 必须使用实例。选择已有同类型实例，或填写新实例名并确认创建 PRIVATE 变量后再插入。插入后请检查参数和调用位置。程序段名调用不保证适用于所有任务上下文。
+
+函数与变量类型数据来自 src/data/functionLibraries/ 下的 JSON。基础快照不代表完整官方手册。每个库说明来源和覆盖范围。维护方法见[贡献指南](CONTRIBUTING.md)。修改 JSON 后必须重新构建。
+
+Standard 库资料来自 33002519.20（09/2020，适用 Control Expert 15.0 及以上）。目录已单独保存。调用清单只包含已核实的具体函数。变量类型说明来自 35006144.27。旧预设中的扩展类型不表示已核实 M580 支持。Unity Pro V13.1 兼容性未验证。
+
+Monaco 加载失败时，网页显示错误并切换到文本框。文本框不提供语法高亮和自动完成。
+
+## 9. 导出规则
+
+导出器按项目 XML 规则生成 XML。这些规则源自开发工作区 AGENTS.md 第 4 节。仓库内的要求见[功能需求](docs/requirements.md)。
+
+- STSource 只允许可执行语句。当前导出器会删除 VAR 声明区，并显示警告。删除声明不会自动创建变量。请先把变量加入变量表，避免丢失声明。
+- 输入、输出和双向参数分别写入对应容器。PositionPin 从 1 递增。
+- 功能块初值写入 variableInit。全局变量初值读取 defaultValue。
+- 空 topologicalAddress 和空 comment 会省略。
+- 导出器展开自闭合标签。
+- 32 位 %MW 变量必须绑定偶数地址。当前导出器会对齐无后缀的奇数地址，并显示警告，不会因此拒绝导出。
+- .xdb 写回时保留未编辑的扩展节点和属性。
+
+从 .xst 或 .xsy 导出 .xdb 属于结构转换。GLOBAL 变量会转为 PRIVATE。网页显示转换警告。程序段的任务上下文不会变成 PLC 任务。请检查转换结果。
+
+导出包含警告时，网页在「导出说明」抽屉显示警告全文。
+
+Control Expert 导入、编译和真机通信测试均未执行。
+
+上述自动对齐和删除声明是当前实现的行为，不代表已满足需求中的拒绝导出规则。请核对导出说明和导出的 XML。需求差异见[功能需求](docs/requirements.md#9-帮助文档)。
+
+## 10. MCP 预留接口
+
+网页提供 window.__M580_MCP_BRIDGE__。Bridge 提供 listTools()、callTool(name, input) 和 getState()。
+
+这是本页内的工具接口，不是独立的 MCP Server。网页不默认连接远程服务。传输适配器只提供接入边界。
+
+| 工具 | 用途 |
+| --- | --- |
+| m580_fb_get_metadata | 读取文档摘要 |
+| m580_fb_list_variables | 按 category 和 search 查询变量 |
+| m580_fb_upsert_variable | 按 id 修改变量，或新增变量 |
+| m580_fb_delete_variable | 按 id 删除变量 |
+| m580_fb_get_source | 按 sectionId 读取代码 |
+| m580_fb_set_source | 写入 source 并解析调用 |
+| m580_fb_insert_snippet | 在 line、column 插入 source 或 kind 模板 |
+| m580_fb_analyze_calls | 重新提取调用 |
+
+保留以下兼容工具：m580_get_state、m580_import、m580_list_variables、m580_upsert_variable、m580_delete_variable、m580_get_section、m580_set_section_source、m580_save_section、m580_format_section、m580_replace_in_section、m580_extract_calls、m580_export_xdb、m580_get_help、m580_jump。
+
+查看 listTools() 返回的 inputSchema 获取各工具的字段和必填参数。callTool() 返回 ok、result 或 error。
+
+示例：
+
+```js
+await window.__M580_MCP_BRIDGE__.callTool('m580_fb_list_variables', { category: 'IN' })
+```
+
+## 11. 部署与更新
+
+执行 npm run build 后，把 dist/ 整体复制到静态文件服务器。支持部署到子路径。不要用 file:// 直接打开。Monaco Worker 需要通过 HTTP 或 HTTPS 加载。
+
+构建产物包含页面、样式、脚本和 Worker。构建产物不依赖外部 CDN。
+
+帮助正文只维护根目录的五语 README。应用通过 Vite raw 导入当前语言的 README。构建器按原名复制五语 README、两份贡献指南和 docs/requirements.md，并保留 docs/images/<语言>/ 截图路径。不要另建帮助正文副本。
+
+本文顶部的语言链接使用相对地址。GitHub 点击链接后打开对应 README。界面帮助点击链接后切换界面语言和帮助正文。切换不会替换当前编辑文档。
+
+每次功能变更必须同步更新五语 README 和 docs/requirements.md。每次交付必须重新运行类型检查、单元测试、构建和浏览器测试。
+
+## 12. 本地开发与检查
+
+使用 Node.js 22.12 或更高的受支持版本。
 
 ```powershell
 npm ci
 npm run dev
 ```
 
-通过终端显示的 HTTP 地址打开网页。不要使用 `file://`。
-
-## 检查和构建
+通过终端显示的 HTTP 地址打开网页。提交前运行：
 
 ```powershell
 npm run typecheck
 npm test
 npm run build
 npm run test:e2e
+node scripts/check-localized-docs.mjs
 ```
 
-构建产物写入 `dist/`。部署时复制整个 `dist/` 目录。构建产物不依赖外部 CDN，并支持部署到子路径。
+Windows 浏览器测试默认使用 Microsoft Edge。其他平台先运行 `npx playwright install chromium`。
 
-浏览器测试在 Windows 上默认使用 Microsoft Edge。其他平台可以先运行：
-
-```powershell
-npx playwright install chromium
-```
-
-## GitHub Pages
-
-仓库中的 GitHub Actions 会在每次推送后执行类型检查、单元测试和生产构建。
-
-所有检查通过后，工作流会把 `dist/` 发布到 GitHub Pages。
-
-页面地址：<https://lilixxs.github.io/M580_FB_Explorer/>
-
-## 截图
-
-截图由内置演示功能块生成，不包含用户文件。
-
-重新生成截图：
+界面变化影响截图时，按顺序运行：
 
 ```powershell
 npm run build
 npm run docs:screenshots
 npm run build
+node scripts/check-localized-docs.mjs
 ```
 
-## 数据和安全边界
+截图只使用内置示例。每种语言的 README 只引用同语言的五张截图。
 
-- 网页在浏览器内解析文件。
-- 网页不会上传导入文件。
-- 网页不会连接 PLC。
-- `.xdb` 示例快照位于 `fixtures/ModbusTCP_Client.xdb`。
-- `dist/`、测试结果、编辑器配置、密钥、本地环境文件和 AI 工具本地文件不会提交。
+GitHub Actions 在推送任意分支后执行类型检查、单元测试、构建和文档校验。检查通过后，工作流把 dist/ 发布到 GitHub Pages。
 
-## 已知边界
+## 13. 贡献与边界
 
-- Control Expert 导入和编译未执行。
-- PLC 真机通信测试未执行。
-- XML 结构校验不等于 Control Expert 导入通过。
-- 从 `.xst` 或 `.xsy` 导出 `.xdb` 时，`GLOBAL` 变量会转为 `.xdb` 私有变量，并显示转换警告。
-
-## 文档
-
-- [贡献指南](CONTRIBUTE.md)
+- [中文贡献指南](CONTRIBUTING.md)
+- [English contribution guide](CONTRIBUTING.en.md)
 - [功能需求](docs/requirements.md)
-- [简体中文帮助真源](requirements/localization/help/zh-CN.md)
-- [其他语言帮助](requirements/localization/help/)
 
-## 许可
+示例快照位于 fixtures/ModbusTCP_Client.xdb。不要提交用户文件、密钥、本地环境文件、node_modules/、dist/、测试结果或 AI 工具本地文件。
+
+XML 结构校验不等于 Control Expert 导入通过。Control Expert 导入、编译和 PLC 真机通信测试未执行。
+
+## 14. 许可
 
 当前仓库未声明开源许可证。除非仓库所有者另行授权，请不要将代码用于生产分发。

@@ -69,6 +69,19 @@ function confirmReplace(): boolean {
   return window.confirm(t('app.confirmReplace'))
 }
 
+/**
+ * README 语言导航链接在帮助抽屉内切换界面语言，不打开 Markdown 文件。
+ * 该处理只改变语言：当前文档、ST 源码和「有修改」标记保持不变。
+ */
+function onHelpLinkClick(event: MouseEvent): void {
+  const target = event.target
+  if (!(target instanceof Element)) return
+  const link = target.closest('[data-help-language]')
+  if (!link) return
+  event.preventDefault()
+  setLocale(String(link.getAttribute('data-help-language') ?? ''))
+}
+
 /** Replace guard for the top bar 新建功能块 dialog: cancel keeps the current document untouched. */
 function onNewBlockSubmit(payload: { name: string; comment: string }): void {
   if (!confirmReplace()) return
@@ -224,7 +237,7 @@ function onExport(): void {
     <VariableDialog />
     <NewBlockDialog v-model:visible="newBlockOpen" @submit="onNewBlockSubmit" />
     <TDrawer v-model:visible="helpOpen" :header="t('app.helpTitle')" size="min(760px, 96vw)" :footer="false">
-      <div class="markdown" v-html="helpHtml"></div>
+      <div class="markdown" v-html="helpHtml" @click="onHelpLinkClick"></div>
     </TDrawer>
     <TDrawer v-model:visible="warningsOpen" :header="t('app.exportTitle')" size="min(620px, 96vw)" :footer="false">
       <p>{{ t('app.exportNote') }}</p>

@@ -3,11 +3,20 @@ import { spawn } from 'node:child_process'
 import { mkdir, readFile } from 'node:fs/promises'
 
 // Capture the built application with bundled demo data, not local user files.
-const server = spawn(process.execPath, ['scripts/serve-dist.mjs'], { stdio: 'pipe' })
+// Port 0 gives this script its own free port, so it never collides with another session's host.
+const server = spawn(process.execPath, ['scripts/serve-dist.mjs'], {
+  stdio: 'pipe',
+  env: { ...process.env, PORT: '0' }
+})
 let browser
 try {
-  await new Promise((resolve, reject) => {
-    server.stdout.on('data', chunk => { if (chunk.toString().includes('Production test:')) resolve() })
+  const baseUrl = await new Promise((resolve, reject) => {
+    let output = ''
+    server.stdout.on('data', chunk => {
+      output += chunk.toString()
+      const match = output.match(/Production test: (\S+)/)
+      if (match) resolve(match[1])
+    })
     server.once('error', reject)
     server.once('exit', code => reject(new Error(`Screenshot server exited: ${code}`)))
     server.stderr.on('data', chunk => reject(new Error(chunk.toString())))
@@ -26,7 +35,7 @@ try {
       // First capture precedes image publication. The help image references are verified after the final build.
       if (response.status() >= 400 && !response.url().includes('/images/')) failures.push(`${response.status()} ${response.url()}`)
     })
-    await page.goto('http://127.0.0.1:5191/explorer/')
+    await page.goto(baseUrl)
     await page.getByTestId('demo-0').click()
     await expect(page.locator('.monaco-editor')).toBeVisible()
     await page.waitForLoadState('networkidle')

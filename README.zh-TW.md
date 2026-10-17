@@ -1,4 +1,10 @@
-# M580_FB_Explorer 使用說明
+# M580_FB_Explorer
+
+[简体中文](README.md) | [English](README.en.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
+
+瀏覽器端的 Schneider M580 Control Expert 交換檔案檢視與編輯工具。本文也是介面說明的唯一本文來源。
+
+線上使用：<https://lilixxs.github.io/M580_FB_Explorer/>
 
 網頁在瀏覽器中解析 Control Expert 交換檔案。網頁不上傳匯入的檔案。網頁不連接 PLC。
 
@@ -18,7 +24,7 @@
 
 ## 2. 匯入檔案
 
-![工作區](images/zh-TW/workspace.png)
+![工作區](docs/images/zh-TW/workspace.png)
 
 點擊頂欄「匯入檔案」選擇 .xdb、.xst 或 .xsy 檔案。也可以把檔案拖到視窗中。
 
@@ -40,7 +46,7 @@
 
 ## 3. 新建功能區塊
 
-![新建功能區塊](images/zh-TW/new-block.png)
+![新建功能區塊](docs/images/zh-TW/new-block.png)
 
 點擊頂欄「新建功能區塊」開啟對話框。
 
@@ -54,7 +60,7 @@
 
 新建文件使用現有變數編輯、ST 編輯、儲存和 .xdb 匯出流程。
 
-## 4. 中繼資訊編輯
+## 4. 中繼資料編輯
 
 功能區塊名稱與註解使用草稿編輯。
 
@@ -62,11 +68,13 @@
 
 點擊「取消」還原原值。
 
+草稿尚未確認時，面板顯示「中繼資料草稿尚未確認」。
+
 ## 5. 版面與引腳檢視
 
 左右分欄預設佔 34% 和 66%。右上變數清單預設佔高度的 1/3。右下程式區段編輯器預設佔高度的 2/3。
 
-左欄依次顯示中繼資訊、呼叫清單和引腳檢視。拖動分隔線可以調整各面板尺寸。雙擊分隔線可以重設。聚焦分隔線後，可以按方向鍵微調尺寸。
+左欄依次顯示中繼資料、呼叫清單和引腳檢視。拖動分隔線可以調整各面板尺寸。雙擊分隔線可以重設。聚焦分隔線後，可以按方向鍵微調尺寸。
 
 網頁在窄螢幕上改為垂直排列。面板內的表格支援橫向捲動。瀏覽器允許本機儲存時，網頁記錄面板尺寸。
 
@@ -78,7 +86,7 @@
 
 ## 6. 變數管理
 
-![變數編輯器](images/zh-TW/variable-editor.png)
+![變數編輯器](docs/images/zh-TW/variable-editor.png)
 
 變數按 IN、OUT、IN_OUT、PUBLIC、PRIVATE 和 GLOBAL 分組。GLOBAL 對應 dataBlock 全域變數。
 
@@ -86,19 +94,19 @@
 
 點擊「新增」建立變數。點擊「改」修改變數。點擊「刪」後確認刪除。點擊上下箭頭調整同類變數順序。引腳序號 PositionPin 依順序重新計算。
 
-![型別選擇](images/zh-TW/type-picker.png)
+![型別選擇](docs/images/zh-TW/type-picker.png)
 
-點擊「選擇型別」可以點選基礎型別。也可以輸入自訂型別。陣列模式提供元素型別、下界和上界。產生結果使用 ARRAY[下界..上界] OF 型別。
+點擊「選擇類型」可以點選基礎型別。也可以輸入自訂型別。陣列模式提供元素型別、下界和上界。產生結果使用 ARRAY[下界..上界] OF 型別。
 
 變數表分別顯示型別和位址。捲動變數表時，目前分組標題吸附在表格頂端。
 
 變數名必須以英文字母或底線開頭。其餘字元只允許英文字母、數字和底線。變數名不得在忽略大小寫後重複。EN 和 ENO 不能新增為普通引腳。
 
-32 位元型別繫結 %MW 時必須使用偶數位址。網頁不擅自改變位址。請在變數對話框中修改錯誤位址。
+32 位元型別繫結 %MW 時必須使用偶數位址。目前匯出器會把無後綴的奇數 %MW 位址改為下一個偶數位址，並顯示轉換警告。請先在變數對話框中確認位址，避免匯出時改變對應。
 
 ## 7. ST 呼叫解析
 
-![呼叫瀏覽](images/zh-TW/call-browser.png)
+![呼叫瀏覽](docs/images/zh-TW/call-browser.png)
 
 左中清單顯示函數和功能區塊呼叫。清單保留未知呼叫，不把未知名稱視為系統函數。解析器忽略字串和註解中的偽呼叫。
 
@@ -131,7 +139,7 @@
 
 EFB 必須使用實例。選擇已有同型別實例，或輸入新實例名並確認建立 PRIVATE 變數後再插入。插入後請檢查參數和呼叫位置。程式區段名呼叫不保證適用於所有任務上下文。
 
-函數與變數型別資料來自 src/data/functionLibraries/ 下的 JSON。基礎快照不代表完整官方手冊。每個函式庫說明來源和涵蓋範圍。維護方法見倉庫 CONTRIBUTE.md。修改 JSON 後必須重新建置。
+函數與變數型別資料來自 src/data/functionLibraries/ 下的 JSON。基礎快照不代表完整官方手冊。每個函式庫說明來源和涵蓋範圍。維護方法見[中文貢獻指南](CONTRIBUTING.md)。修改 JSON 後必須重新建置。
 
 Standard 函式庫資料來自 33002519.20（09/2020，適用 Control Expert 15.0 以上）。目錄已單獨保存。呼叫清單只包含已核實的具體函數。變數型別說明來自 35006144.27。舊預設中的擴充型別不表示已核實 M580 支援。Unity Pro V13.1 相容性未驗證。
 
@@ -139,14 +147,14 @@ Monaco 載入失敗時，網頁顯示錯誤並切換到文字框。文字框不�
 
 ## 9. 匯出規則
 
-匯出器按倉庫 AGENTS.md 第 4 節產生 XML。
+匯出器按專案 XML 規則產生 XML。這些規則來自開發工作區 AGENTS.md 第 4 節。倉庫內的要求見[功能需求](docs/requirements.md)。
 
-- STSource 只允許可執行語句。偵測到 VAR 宣告區時，網頁拒絕匯出。請把變數放入變數表。
+- STSource 只允許可執行語句。目前匯出器會刪除 VAR 宣告區，並顯示警告。刪除宣告不會自動建立變數。請先把變數加入變數表，避免遺失宣告。
 - 輸入、輸出和雙向參數分別寫入對應容器。PositionPin 從 1 遞增。
 - 功能區塊初值寫入 variableInit。全域變數初值讀取 defaultValue。
 - 空 topologicalAddress 和空 comment 會省略。
 - 匯出器展開自閉合標籤。
-- 32 位元 %MW 變數必須繫結偶數位址。校驗失敗時拒絕匯出。
+- 32 位元 %MW 變數必須繫結偶數位址。目前匯出器會對齊無後綴的奇數位址，並顯示警告，不會因此拒絕匯出。
 - .xdb 寫回時保留未編輯的擴充節點和屬性。
 
 從 .xst 或 .xsy 匯出 .xdb 屬於結構轉換。GLOBAL 變數會轉為 PRIVATE。網頁顯示轉換警告。程式區段的任務上下文不會變成 PLC 任務。請檢查轉換結果。
@@ -154,6 +162,8 @@ Monaco 載入失敗時，網頁顯示錯誤並切換到文字框。文字框不�
 匯出包含警告時，網頁在「匯出說明」抽屜顯示警告全文。
 
 Control Expert 匯入、編譯和真機通訊測試均未執行。
+
+上述自動對齊和刪除宣告是目前實作的行為，不代表已滿足需求中的拒絕匯出規則。請核對匯出說明和匯出的 XML。實作差異見[功能需求](docs/requirements.md)。
 
 ## 10. MCP 預留介面
 
@@ -188,6 +198,56 @@ await window.__M580_MCP_BRIDGE__.callTool('m580_fb_list_variables', { category: 
 
 建置產物包含頁面、樣式、腳本和 Worker。建置產物不依賴外部 CDN。
 
-說明真源為 requirements/localization/help/ 目錄下的 zh-CN.md、en.md、zh-TW.md、ja.md 和 ko.md。應用透過 Vite raw 方式載入目前語言的 .md 檔案。建置器把說明檔案複製為 dist/HELP.{locale}.md，並產生預設 HELP.md。README.md 由 README.en.md 的副本產生。
+說明本文只維護根目錄的五語 README。應用透過 Vite raw 匯入目前語言的 README。建置器按原名複製五語 README、兩份貢獻指南和 docs/requirements.md，並保留 docs/images/<語言>/ 截圖路徑。不要另建說明本文副本。
 
-每次功能變更必須同步更新說明文件和 docs/requirements.md。每次交付必須重新執行型別檢查、單元測試和建置。
+本文頂部的語言連結使用相對位址。GitHub 點擊連結後開啟對應 README。介面說明點擊連結後切換介面語言和說明本文。切換不會取代目前編輯的文件。
+
+每次功能變更必須同步更新五語 README 和 docs/requirements.md。每次交付必須重新執行型別檢查、單元測試、建置和瀏覽器測試。
+
+## 12. 本機開發與檢查
+
+使用 Node.js 22.12 或更高的受支援版本。
+
+```powershell
+npm ci
+npm run dev
+```
+
+透過終端顯示的 HTTP 位址開啟網頁。提交前執行：
+
+```powershell
+npm run typecheck
+npm test
+npm run build
+npm run test:e2e
+node scripts/check-localized-docs.mjs
+```
+
+Windows 瀏覽器測試預設使用 Microsoft Edge。其他平台先執行 `npx playwright install chromium`。
+
+介面變更影響截圖時，依序執行：
+
+```powershell
+npm run build
+npm run docs:screenshots
+npm run build
+node scripts/check-localized-docs.mjs
+```
+
+截圖只使用內建範例。每種語言的 README 只引用同語言的五張截圖。
+
+GitHub Actions 在推送任意分支後執行型別檢查、單元測試、建置和文件檢查。檢查通過後，工作流程把 dist/ 發布到 GitHub Pages。
+
+## 13. 貢獻與邊界
+
+- [中文貢獻指南](CONTRIBUTING.md)
+- [English contribution guide](CONTRIBUTING.en.md)
+- [功能需求](docs/requirements.md)
+
+範例快照位於 fixtures/ModbusTCP_Client.xdb。不要提交使用者檔案、金鑰、本機環境檔案、node_modules/、dist/、測試結果或 AI 工具本機檔案。
+
+XML 結構檢查不等於 Control Expert 匯入通過。Control Expert 匯入、編譯和 PLC 真機通訊測試未執行。
+
+## 14. 授權
+
+目前倉庫未宣告開放原始碼授權。除非倉庫擁有者另行授權，請不要將程式碼用於正式環境散布。
