@@ -1,5 +1,7 @@
 import { computed, reactive } from 'vue'
-import { HELP_MARKDOWN } from './data/helpContent'
+import { getHelpMarkdown } from './data/helpContent'
+import { locale } from './i18n'
+import { localize } from './localize'
 import {
   CATEGORY_ORDER,
   CATEGORY_LABELS,
@@ -75,7 +77,7 @@ export const state = reactive<UiState>({
   jump: null,
   variableFocusNonce: 0,
   variableEditor: null,
-  helpMarkdown: HELP_MARKDOWN,
+  get helpMarkdown() { return getHelpMarkdown(locale.value) },
   bootError: ''
 })
 
@@ -104,7 +106,7 @@ export function groupVariables(variables: VariableDef[], search: string): Array<
         .toLowerCase()
         .includes(query)
     })
-    return { category, label: CATEGORY_LABELS[category], items }
+    return { category, label: localize(CATEGORY_LABELS[category]), items }
   }).filter((group) => group.items.length > 0)
 }
 

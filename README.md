@@ -20,6 +20,10 @@
 - 分列显示变量类型与地址，并固定当前变量分类标题。
 - 提供两栏函数/功能块调用弹窗，并从 JSON 加载函数库和类型数据。
 - 联动定位代码、变量引用、变量列表和功能块引脚。
+- 使用 Vue I18n 切换简体中文、英文、繁体中文、日文和韩文。
+- 新建空白功能块。确认或取消功能块名称与注释的草稿。
+
+导入和导出统一使用顶栏按钮。
 
 保存并重新解析会清除当前程序段的「未保存」标记。顶栏「有修改」会保留到导出文件。
 
@@ -31,7 +35,7 @@
 
 工作区将功能块信息、调用列表、引脚图、变量列表和 ST 编辑器放在同一页面。
 
-![工作区](docs/images/workspace.png)
+![工作区](docs/images/zh-CN/workspace.png)
 
 左侧显示文件信息、程序段调用和引脚视图。右侧显示变量表和程序段编辑器。分隔条支持拖动、双击复位和键盘调整。
 
@@ -39,25 +43,25 @@
 
 变量编辑器提供名称、类型、地址、默认值、初值和注释字段。
 
-![变量编辑](docs/images/variable-editor.png)
+![变量编辑](docs/images/zh-CN/variable-editor.png)
 
 网页在保存前检查变量名、重复变量、分类和地址约束。网页不会覆盖用户原始文件。
 
 点击「选择类型」可以选择基础类型、自定义类型和数组。
 
-![类型选择](docs/images/type-picker.png)
+![类型选择](docs/images/zh-CN/type-picker.png)
 
 ### 插入调用
 
 编辑器工具栏和右键菜单提供「函数/功能块调用」。弹窗支持函数库分组、搜索和实例选择。
 
-![调用浏览器](docs/images/call-browser.png)
+![调用浏览器](docs/images/zh-CN/call-browser.png)
 
 ### 帮助与 MCP
 
 帮助抽屉说明文件格式、编辑器操作、导出规则和 MCP Bridge 工具。
 
-![帮助抽屉](docs/images/help.png)
+帮助内容和截图随界面语言切换。语言选择保存在浏览器中。
 
 MCP Bridge 只提供当前网页的本地调用接口。项目不默认连接远程服务。
 
@@ -106,6 +110,7 @@ npx playwright install chromium
 ```powershell
 npm run build
 npm run docs:screenshots
+npm run build
 ```
 
 ## 数据和安全边界
@@ -127,7 +132,8 @@ npm run docs:screenshots
 
 - [贡献指南](CONTRIBUTE.md)
 - [功能需求](docs/requirements.md)
-- [内置帮助内容](src/data/helpContent.ts)
+- [简体中文帮助真源](requirements/localization/help/zh-CN.md)
+- [其他语言帮助](requirements/localization/help/)
 
 ## 许可
 

@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import type { ExportResult, ParsedDocument, ProgramSection, VariableCategory, VariableDef } from '../types'
 import { stripVarBlocks } from './st'
 import { dedupe, isWideType, parseAddress, validateForExport } from './validation'
@@ -7,7 +8,7 @@ export class ExportValidationError extends Error {
   readonly errors: string[]
 
   constructor(errors: string[]) {
-    super(`导出校验未通过：${errors.join('；')}`)
+    super(t('core.exportXdb.validationFailed', { errors: errors.join('；') }))
     this.name = 'ExportValidationError'
     this.errors = errors
   }
@@ -48,7 +49,9 @@ function alignAddress(variable: VariableDef, warnings: string[]): string {
   const aligned = address.replace(/^(%[A-Z]{1,3}\d+)/, (prefix) => {
     return prefix.slice(0, -String(word).length) + String(word + 1)
   })
-  warnings.push(`变量 ${variable.name} 的 32 位地址 ${address} 地址号为奇数，已自动对齐为 ${aligned}`)
+  warnings.push(
+    t('core.exportXdb.addressAligned', { name: variable.name, address, aligned })
+  )
   return aligned
 }
 
@@ -117,7 +120,7 @@ export function buildXdb(document_: ParsedDocument, options: ExportOptions = {})
 
   const effectiveVariables: VariableDef[] = document_.variables.map((variable) => {
     if (variable.category === 'GLOBAL') {
-      warnings.push(`GLOBAL 变量 ${variable.name} 无法直接映射到 .xdb，已并入 privateLocalVariables（PRIVATE）`)
+      warnings.push(t('core.exportXdb.globalMerged', { name: variable.name }))
       return {
         ...variable,
         category: 'PRIVATE' as VariableCategory,
@@ -144,7 +147,7 @@ export function buildXdb(document_: ParsedDocument, options: ExportOptions = {})
   }
 
   if (document_.sections.length === 0) {
-    warnings.push('源文件不含程序段，已生成空 ST 主体以保证 .xdb 结构完整')
+    warnings.push(t('core.exportXdb.emptyBody'))
     const program = createElement(doc, 'FBProgram', { name: fbName })
     const stSource = doc.createElement('STSource')
     stSource.textContent = '\n'
@@ -197,7 +200,7 @@ function buildProgramElement(doc: Document, section: ProgramSection, warnings: s
   if (section.language === 'ST') {
     const stripped = stripVarBlocks(section.stSource)
     if (stripped.removed > 0) {
-      warnings.push(`程序段 ${section.name} 的 ST 源码含 ${stripped.removed} 个 VAR 声明区，已按 Unity Pro 约束剥离`)
+      warnings.push(t('core.exportXdb.varStripped', { name: section.name, count: stripped.removed }))
     }
     const stSource = doc.createElement('STSource')
     stSource.textContent = `\n${stripped.source.replace(/\r\n?/g, '\n')}\n`
@@ -206,7 +209,7 @@ function buildProgramElement(doc: Document, section: ProgramSection, warnings: s
   }
 
   if (!section.xmlSource.trim()) {
-    warnings.push(`程序段 ${section.name} 为非 ST 且无原文，导出时跳过`)
+    warnings.push(t('core.exportXdb.nonStSkipped', { name: section.name }))
     return program
   }
 
@@ -217,7 +220,9 @@ function buildProgramElement(doc: Document, section: ProgramSection, warnings: s
       program.appendChild(doc.importNode(child, true))
     }
   } catch (error) {
-    warnings.push(`程序段 ${section.name} 的非 ST 原文无法解析，导出时跳过：${(error as Error).message}`)
+    warnings.push(
+      t('core.exportXdb.nonStParseFailed', { name: section.name, message: (error as Error).message })
+    )
   }
 
   return program

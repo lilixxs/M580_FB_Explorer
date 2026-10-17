@@ -2,6 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import { Button as TButton, Dialog as TDialog } from 'tdesign-vue-next'
 import { addVariable } from '../actions'
+import { t } from '../i18n'
+import { localize } from '../localize'
 import { state } from '../store'
 import {
   ALL_LIBRARY_ENTRIES,
@@ -130,15 +132,21 @@ const efbParameterHint = computed(() => {
   if (!entry) return ''
   const parameters = efbParameters.value
   if (parameters.length === 0) {
-    return `${entry.label} 未提供参数表，插入 实例() 后需要补参数。`
+    return t('functionCallDialog.efbNoParameters', { label: entry.label })
   }
-  return `参数：${parameters.map((parameter) => `${parameter} := ...`).join('，')}`
+  return t('functionCallDialog.efbParameters', {
+    list: parameters.map((parameter) => `${parameter} := ...`).join(t('functionCallDialog.parameterSeparator'))
+  })
 })
 
 const efbOutputHint = computed(() => {
   const outputs = efbOutputs.value
-  if (outputs.length === 0) return '输出请按该功能块的声明读取；不要用 := 绑定输出。'
-  return `输出 ${outputs.map((output) => `实例.${output}`).join(' / ')}；不要用 := 绑定输出。`
+  if (outputs.length === 0) return t('functionCallDialog.efbOutputsHint')
+  // The member prefix is interface text, not an identifier, so it is translated as well.
+  const prefix = t('functionCallDialog.instancePrefix')
+  return t('functionCallDialog.efbOutputs', {
+    list: outputs.map((output) => `${prefix}.${output}`).join(' / ')
+  })
 })
 
 watch(
@@ -208,11 +216,11 @@ function insertItem(item: CallBrowserItem): void {
 function insertCustom(): void {
   const name = customName.value.trim()
   if (!name) {
-    customError.value = '调用名称不能为空'
+    customError.value = t('functionCallDialog.customNameRequired')
     return
   }
   if (!NAME_RE.test(name)) {
-    customError.value = '调用名称只允许字母、数字与下划线（IEC 61131-3 命名规则）'
+    customError.value = t('functionCallDialog.customNamePattern')
     return
   }
   const params = customParams.value.trim()
@@ -245,15 +253,15 @@ function insertEfbCall(): void {
   } else {
     const name = efbNewName.value.trim()
     if (!name) {
-      efbError.value = '请选择已声明实例，或填写新实例名'
+      efbError.value = t('functionCallDialog.instanceRequired')
       return
     }
     if (!NAME_RE.test(name)) {
-      efbError.value = '实例名只允许字母、数字与下划线（IEC 61131-3 命名规则）'
+      efbError.value = t('functionCallDialog.instancePattern')
       return
     }
     if ((state.doc?.variables ?? []).some((variable) => variable.name.trim().toUpperCase() === name.toUpperCase())) {
-      efbError.value = `变量 ${name} 已存在，请从上方选择已有实例`
+      efbError.value = t('functionCallDialog.instanceExists', { name })
       return
     }
     const error = addVariable({
@@ -262,11 +270,11 @@ function insertEfbCall(): void {
       category: 'PRIVATE',
       topologicalAddress: '',
       defaultValue: '',
-      comment: `函数调用弹窗创建的 ${entry.label} 实例`,
+      comment: t('functionCallDialog.createdInstanceComment', { label: entry.label }),
       initValue: ''
     })
     if (error) {
-      efbError.value = `创建实例失败：${error}`
+      efbError.value = t('functionCallDialog.createFailed', { error })
       return
     }
     instanceName = name
@@ -282,13 +290,13 @@ function insertEfbCall(): void {
 <template>
   <TDialog
     :visible="props.visible"
-    header="函数/功能块调用"
+    :header="t('functionCallDialog.title')"
     :footer="false"
     width="min(760px, 96vw)"
     @close="close"
   >
     <div class="call-browser" data-testid="function-call-dialog">
-      <nav class="call-browser-nav" aria-label="调用分类">
+      <nav class="call-browser-nav" :aria-label="t('functionCallDialog.categoryNavAria')">
         <button
           v-for="category in CALL_BROWSER_CATEGORIES"
           :key="category.id"
@@ -299,12 +307,12 @@ function insertEfbCall(): void {
           :aria-pressed="filter === category.id"
           @click="pickCategory(category.id)"
         >
-          <span class="grow">{{ category.label }}</span>
+          <span class="grow">{{ localize(category.label) }}</span>
           <span class="count">{{ categoryCounts[category.id] }}</span>
         </button>
 
         <template v-if="groupsInView.length > 0">
-          <div class="call-browser-group-label">库分组</div>
+          <div class="call-browser-group-label">{{ t('functionCallDialog.libraryGroups') }}</div>
           <button
             type="button"
             class="call-browser-tab call-browser-tab--sub"
@@ -312,7 +320,7 @@ function insertEfbCall(): void {
             data-group-filter=""
             @click="groupFilter = ''"
           >
-            <span class="grow">全部组</span>
+            <span class="grow">{{ t('functionCallDialog.allGroups') }}</span>
           </button>
           <button
             v-for="group in groupsInView"
@@ -323,7 +331,7 @@ function insertEfbCall(): void {
             :data-group-filter="group.id"
             @click="pickGroup(group.id)"
           >
-            <span class="grow">{{ group.label }}</span>
+            <span class="grow">{{ localize(group.label) }}</span>
           </button>
         </template>
       </nav>
@@ -331,26 +339,26 @@ function insertEfbCall(): void {
       <div class="call-browser-main">
         <template v-if="filter === 'custom'">
           <div class="call-custom">
-            <label for="call-custom-name">调用名称</label>
+            <label for="call-custom-name">{{ t('functionCallDialog.customNameLabel') }}</label>
             <input
               id="call-custom-name"
               v-model="customName"
               class="field-input mono"
-              placeholder="例如 fbMotor"
+              :placeholder="t('functionCallDialog.customNamePlaceholder')"
               data-testid="custom-call-name"
             />
-            <label for="call-custom-params">参数文本（可留空）</label>
+            <label for="call-custom-params">{{ t('functionCallDialog.customParamsLabel') }}</label>
             <input
               id="call-custom-params"
               v-model="customParams"
               class="field-input mono"
-              placeholder="例如 xStart := xCmd, xStop := xStopCmd, xRun => xRun"
+              :placeholder="t('functionCallDialog.customParamsPlaceholder')"
               data-testid="custom-call-params"
             />
             <div v-if="customError" class="error" data-testid="custom-call-error">{{ customError }}</div>
-            <div class="hint">插入文本为 名称(参数) 或 名称()，插入位置为打开弹窗时的编辑器光标处。</div>
+            <div class="hint">{{ t('functionCallDialog.customHint') }}</div>
             <TButton size="small" theme="primary" data-testid="insert-custom-call" @click="insertCustom">
-              插入自定义调用
+              {{ t('functionCallDialog.insertCustom') }}
             </TButton>
           </div>
         </template>
@@ -361,12 +369,12 @@ function insertEfbCall(): void {
               v-model="query"
               class="field-input"
               type="search"
-              aria-label="搜索调用项"
-              placeholder="搜索函数 / 功能块 / 子函数"
+              :aria-label="t('functionCallDialog.searchAria')"
+              :placeholder="t('functionCallDialog.searchPlaceholder')"
             />
           </div>
-          <div class="call-browser-list" role="listbox" aria-label="可插入调用">
-            <div v-if="items.length === 0" class="empty-hint">没有匹配的条目。</div>
+          <div class="call-browser-list" role="listbox" :aria-label="t('functionCallDialog.listAria')">
+            <div v-if="items.length === 0" class="empty-hint">{{ t('functionCallDialog.listEmpty') }}</div>
             <div
               v-for="item in items"
               :key="item.id"
@@ -376,46 +384,46 @@ function insertEfbCall(): void {
               :title="item.detail"
               @click="selectItem(item)"
             >
-              <span class="badge" :class="`kind-${item.category}`">{{ LIBRARY_CATEGORY_LABELS[item.category] }}</span>
+              <span class="badge" :class="`kind-${item.category}`">{{ localize(LIBRARY_CATEGORY_LABELS[item.category]) }}</span>
               <span class="call-lib-name mono">{{ item.label }}</span>
-              <span class="call-lib-detail" :title="item.detail">{{ item.detail || item.insertText }}</span>
+              <span class="call-lib-detail" :title="localize(item.detail)">{{ localize(item.detail) || item.insertText }}</span>
               <button type="button" class="mini-btn lib-insert" @click.stop="insertItem(item)">
-                {{ item.kind === 'efb' ? '实例…' : '插入' }}
+                {{ item.kind === 'efb' ? t('functionCallDialog.instanceEllipsis') : t('functionCallDialog.insert') }}
               </button>
             </div>
           </div>
 
           <div v-if="selectedEfb" class="efb-panel" data-testid="efb-panel">
             <div class="efb-head">
-              <span class="badge kind-efb">功能块</span>
+              <span class="badge kind-efb">{{ t('functionCallDialog.efbBadge') }}</span>
               <span class="grow mono">{{ selectedEfb.label }}</span>
             </div>
             <div class="hint" data-testid="efb-parameter-hint">{{ efbParameterHint }}</div>
 
             <template v-if="efbInstances.length > 0">
-              <label for="efb-instance">已声明实例</label>
+              <label for="efb-instance">{{ t('functionCallDialog.declaredInstances') }}</label>
               <select id="efb-instance" v-model="efbInstanceId" class="field-select mono" data-testid="efb-instance">
                 <option v-for="instance in efbInstances" :key="instance.id" :value="instance.id">
                   {{ instance.name }}
                 </option>
-                <option :value="NEW_INSTANCE_ID" data-testid="efb-instance-new">新建实例…</option>
+                <option :value="NEW_INSTANCE_ID" data-testid="efb-instance-new">{{ t('functionCallDialog.newInstance') }}</option>
               </select>
             </template>
             <template v-else>
               <div class="hint" data-testid="efb-no-instance">
-                未声明 {{ selectedEfb.label }} 实例。填写实例名后插入会新建 PRIVATE 变量；取消不会创建。
+                {{ t('functionCallDialog.noInstance', { label: selectedEfb.label }) }}
               </div>
             </template>
 
             <template v-if="creatingInstance">
               <label for="efb-new-instance">
-                {{ efbInstances.length > 0 ? '新实例名' : '实例名' }}
+                {{ efbInstances.length > 0 ? t('functionCallDialog.newInstanceName') : t('functionCallDialog.instanceName') }}
               </label>
               <input
                 id="efb-new-instance"
                 v-model="efbNewName"
                 class="field-input mono"
-                placeholder="例如 tonRun"
+                :placeholder="t('functionCallDialog.instancePlaceholder')"
                 data-testid="efb-new-instance"
               />
             </template>
@@ -423,12 +431,12 @@ function insertEfbCall(): void {
             <div v-if="efbError" class="error" data-testid="efb-error">{{ efbError }}</div>
             <div class="hint" data-testid="efb-outputs">{{ efbOutputHint }}</div>
             <TButton size="small" theme="primary" data-testid="insert-efb-call" @click="insertEfbCall">
-              插入实例调用
+              {{ t('functionCallDialog.insertInstance') }}
             </TButton>
           </div>
 
           <div v-else-if="filter === 'efb'" class="hint">
-            EFB 只插入实例调用：选择已声明实例，或填写实例名并显式创建 PRIVATE 变量。
+            {{ t('functionCallDialog.efbOnlyHint') }}
           </div>
         </template>
       </div>

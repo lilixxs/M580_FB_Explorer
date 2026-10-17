@@ -3,7 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "engines": { "node": "^22.12.0 || ^24.0.0 || >=26.0.0" },
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+  },
   "description": "Browser-based Schneider M580 function block exchange file explorer",
   "scripts": {
     "dev": "vite",
@@ -17,12 +19,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "markdown-it": "^15.0.3",
     "monaco-editor": "^0.52.2",
     "tdesign-vue-next": "^1.10.7",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "vue-i18n": "^11.4.15"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
+    "@types/markdown-it": "^14.2.0",
     "@types/node": "^22.10.2",
     "@vitejs/plugin-vue": "^6.0.10",
     "jsdom": "^25.0.1",

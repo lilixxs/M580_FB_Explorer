@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import {
   CATEGORY_ORDER,
   type ExchangeKind,
@@ -64,11 +65,12 @@ function readVariableElement(element: Element, category: VariableCategory, colle
   }
 
   const report = validateVariable(variable, [], variable.id)
+  const displayName = variable.name || t('core.parse.anonymous')
   for (const message of report.errors) {
-    collector.warnings.push(`[${category}] ${variable.name || '(未命名)'}：${message}`)
+    collector.warnings.push(t('core.parse.variableWarning', { category, name: displayName, message }))
   }
   for (const message of report.warnings) {
-    collector.warnings.push(`[${category}] ${variable.name || '(未命名)'}：${message}`)
+    collector.warnings.push(t('core.parse.variableWarning', { category, name: displayName, message }))
   }
 
   collector.variables.push(variable)
@@ -184,7 +186,7 @@ function collectSections(root: Element, kind: ExchangeKind, warnings: string[]):
   }
 
   if (sections.length === 0) {
-    warnings.push('未找到可编辑的程序段或功能块程序')
+    warnings.push(t('core.parse.noSections'))
   }
 
   return sections
@@ -197,9 +199,7 @@ export function parseExchange(rawXml: string, fileName = 'document.xdb'): Parsed
   const kind = ROOT_KIND[rootTag]
 
   if (!kind) {
-    throw new Error(
-      `不支持的根节点 <${rootTag}>，仅支持 FBExchangeFile(.xdb)、STExchangeFile(.xst)、VariablesExchangeFile(.xsy)`
-    )
+    throw new Error(t('core.parse.unsupportedRoot', { root: rootTag }))
   }
 
   const collector = collectVariables(root, kind)
@@ -210,7 +210,7 @@ export function parseExchange(rawXml: string, fileName = 'document.xdb'): Parsed
     if (section.language === 'ST') {
       const masked = maskCommentsAndStrings(section.stSource)
       if (/\bVAR(?:_[A-Z_]+)?\b/i.test(masked)) {
-        warnings.push(`程序段 ${section.name} 的 ST 源码含 VAR 声明区，导出时会自动剥离并警告`)
+        warnings.push(t('core.parse.varDeclaration', { name: section.name }))
       }
     }
   }

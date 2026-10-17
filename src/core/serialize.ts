@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { directChildren, parseXml, serializeDocument } from './xml'
 
 function programNodes(root: Element): Element[] {
@@ -21,7 +22,7 @@ export function setSectionSource(rawXml: string, index: number, source: string):
   const nodes = programNodes(doc.documentElement)
   const node = nodes[index]
   if (!node) {
-    throw new Error(`找不到序号为 ${index} 的程序段节点`)
+    throw new Error(t('core.serialize.sectionNotFound', { index }))
   }
   let stSource = Array.from(node.children).find((child) => child.tagName === 'STSource')
   if (!stSource) {

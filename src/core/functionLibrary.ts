@@ -8,6 +8,7 @@
 
 import baseLibraryJson from '../data/functionLibraries/base.json'
 import typeLibraryJson from '../data/functionLibraries/types.json'
+import { t } from '../i18n'
 import type { ProgramSection } from '../types'
 import { validateTypeName } from './validation'
 
@@ -244,9 +245,9 @@ export const FUNCTION_LIBRARIES: FunctionLibrary[] = [BASE_FUNCTION_LIBRARY]
 for (const [path, raw] of Object.entries(bundledManifests).sort(([a], [b]) => a.localeCompare(b))) {
   if (path.endsWith('/base.json') || path.endsWith('/types.json')) continue
   const parsed = parseFunctionLibrary(raw)
-  if (!parsed) throw new Error(`函数库 JSON 无有效 entries：${path}`)
+  if (!parsed) throw new Error(t('core.functionLibrary.noValidEntries', { path }))
   if (isRecord(raw) && Array.isArray(raw.entries) && parsed.entries.length !== raw.entries.length) {
-    throw new Error(`函数库 JSON 含无效条目：${path}`)
+    throw new Error(t('core.functionLibrary.invalidEntries', { path }))
   }
   FUNCTION_LIBRARIES.push(parsed)
 }
@@ -320,21 +321,21 @@ export function buildArrayTypeChecked(
   upper: string
 ): { ok: true; typeName: string } | { ok: false; error: string } {
   const element = (customElementType.trim() || elementType.trim()).trim()
-  if (!element) return { ok: false, error: '元素类型不能为空' }
+  if (!element) return { ok: false, error: t('core.functionLibrary.arrayElementEmpty') }
   if (validateTypeName(element)) {
-    return { ok: false, error: '元素类型格式非法，可用类型名、STRING[长度] 或数组类型' }
+    return { ok: false, error: t('core.functionLibrary.arrayElementInvalid') }
   }
   const lowerText = lower.trim()
   const upperText = upper.trim()
   if (!/^-?\d+$/.test(lowerText) || !/^-?\d+$/.test(upperText)) {
-    return { ok: false, error: '数组上下界必须是整数' }
+    return { ok: false, error: t('core.functionLibrary.arrayBoundsNotInteger') }
   }
   const lowerValue = Number.parseInt(lowerText, 10)
   const upperValue = Number.parseInt(upperText, 10)
   if (!Number.isSafeInteger(lowerValue) || !Number.isSafeInteger(upperValue)) {
-    return { ok: false, error: '数组上下界超出安全整数范围' }
+    return { ok: false, error: t('core.functionLibrary.arrayBoundsRange') }
   }
-  if (lowerValue > upperValue) return { ok: false, error: '数组下界不能大于上界' }
+  if (lowerValue > upperValue) return { ok: false, error: t('core.functionLibrary.arrayBoundsOrder') }
   return { ok: true, typeName: buildArrayType(element, lowerValue, upperValue) }
 }
 
@@ -349,9 +350,9 @@ export function buildSubFunctionItems(
       label: section.name,
       kind: 'sub' as const,
       category: 'sub' as const,
-      detail: `当前文档程序段：${section.name}()`,
+      detail: t('core.functionLibrary.subFunctionDetail', { name: section.name }),
       insertText: `${section.name}()`,
-      source: '程序段'
+      source: t('core.functionLibrary.sectionSource')
     }))
 }
 

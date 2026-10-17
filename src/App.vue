@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
-import { Button as TButton, Drawer as TDrawer } from 'tdesign-vue-next'
+import { Button as TButton, Drawer as TDrawer, ConfigProvider as TConfigProvider } from 'tdesign-vue-next'
+import { locale, setLocale, SUPPORTED_LOCALES, t } from './i18n'
+import { componentLocale } from './tdesignLocale'
 import SplitPane from './components/SplitPane.vue'
 import TreePanel from './components/TreePanel.vue'
 import VariablesPanel from './components/VariablesPanel.vue'
@@ -8,22 +10,31 @@ import CallsPanel from './components/CallsPanel.vue'
 import CodeEditor from './components/CodeEditor.vue'
 import PinDiagram from './components/PinDiagram.vue'
 import VariableDialog from './components/VariableDialog.vue'
+import NewBlockDialog from './components/NewBlockDialog.vue'
 import { DEMO_FILES } from './data/demo'
-import { exportXdbText, loadDemoFile, loadExchangeXml, setStatus } from './actions'
+import {
+  createNewBlockDocument,
+  exportXdbText,
+  hasUnexportedChanges,
+  loadDemoFile,
+  loadExchangeXml,
+  setStatus
+} from './actions'
 import { activeSection, state } from './store'
 import { renderMarkdown } from './core/markdown'
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const dragActive = ref(false)
 const helpOpen = ref(false)
+const newBlockOpen = ref(false)
 const exportWarnings = ref<string[]>([])
 const warningsOpen = ref(false)
 const helpHtml = computed(() => renderMarkdown(state.helpMarkdown))
 
 const section = computed(() => activeSection.value)
 const docLabel = computed(() => {
-  if (!state.doc) return '未载入文件'
-  return `${state.doc.fileName} · ${state.doc.sections.length} 段 · ${state.doc.variables.length} 变量`
+  if (!state.doc) return t('app.noDocument')
+  return t('app.documentLabel', { fileName: state.doc.fileName, sections: state.doc.sections.length, variables: state.doc.variables.length })
 })
 
 function openFilePicker(): void {
@@ -44,7 +55,7 @@ async function importFile(file: File): Promise<void> {
     const text = await file.text()
     loadExchangeXml(text, file.name)
   } catch (error) {
-    setStatus(`读取文件失败：${(error as Error).message}`, 'error')
+    setStatus(t('app.readFailed', { error: (error as Error).message }), 'error')
   }
 }
 
@@ -54,11 +65,18 @@ function loadDemo(index: number): void {
 }
 
 function confirmReplace(): boolean {
-  return !state.dirty || window.confirm('当前修改尚未导出。是否放弃修改并载入其他文件？')
+  if (!hasUnexportedChanges()) return true
+  return window.confirm(t('app.confirmReplace'))
+}
+
+/** Replace guard for the top bar 新建功能块 dialog: cancel keeps the current document untouched. */
+function onNewBlockSubmit(payload: { name: string; comment: string }): void {
+  if (!confirmReplace()) return
+  if (createNewBlockDocument(payload.name, payload.comment) === null) newBlockOpen.value = false
 }
 
 function beforeUnload(event: BeforeUnloadEvent): void {
-  if (state.dirty) { event.preventDefault(); event.returnValue = '' }
+  if (hasUnexportedChanges()) { event.preventDefault(); event.returnValue = '' }
 }
 onMounted(() => window.addEventListener('beforeunload', beforeUnload))
 onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
@@ -107,21 +125,25 @@ function onExport(): void {
 </script>
 
 <template>
+  <TConfigProvider :global-config="componentLocale">
   <div class="app" @dragover="onDragOver" @dragleave="onDragLeave" @drop="onDrop">
     <header class="app-header">
       <div class="app-brand">
         <span class="title">M580_FB_Explorer</span>
-        <span class="subtitle">Control Expert 交换文件查看与编辑</span>
+        <span class="subtitle">{{ t('app.subtitle') }}</span>
       </div>
 
       <div class="doc-meta" :title="docLabel">
         <span>{{ docLabel }}</span>
-        <span v-if="state.dirty" style="color: var(--m580-warning)">有修改</span>
+        <span v-if="state.dirty" style="color: var(--m580-warning)">{{ t('app.dirty') }}</span>
       </div>
 
       <span class="spacer"></span>
 
       <div class="header-actions">
+        <select class="field-input language-select" data-testid="language-select" :aria-label="t('app.language')" :value="locale" @change="setLocale(($event.target as HTMLSelectElement).value)">
+          <option v-for="language in SUPPORTED_LOCALES" :key="language.value" :value="language.value">{{ language.label }}</option>
+        </select>
         <input
           ref="fileInput"
           type="file"
@@ -129,21 +151,23 @@ function onExport(): void {
           style="display: none"
           @change="onFileChange"
         />
-        <TButton size="small" theme="primary" @click="openFilePicker">导入文件</TButton>
+        <TButton size="small" theme="primary" data-testid="new-block" @click="newBlockOpen = true">{{ t('app.newBlock.title') }}</TButton>
+        <TButton size="small" data-testid="import-file" @click="openFilePicker">{{ t('app.import') }}</TButton>
 
         <TButton
           v-for="(demo, index) in DEMO_FILES"
           :key="demo.fileName"
           size="small"
           variant="outline"
-          :title="`载入 ${demo.fileName}`"
+          :title="t('app.loadDemo', { fileName: demo.fileName })"
+          :data-testid="`demo-${index}`"
           @click="loadDemo(index)"
         >
-          {{ demo.label }}
+          {{ t(['app.demoBlock', 'app.demoSection', 'app.demoVariables'][index]) }}
         </TButton>
 
-        <TButton size="small" :disabled="!state.doc" @click="onExport">导出 .xdb</TButton>
-        <TButton size="small" variant="outline" @click="helpOpen = true">帮助</TButton>
+        <TButton size="small" :disabled="!state.doc" data-testid="export-file" @click="onExport">{{ t('app.export') }}</TButton>
+        <TButton size="small" variant="outline" data-testid="open-help" @click="helpOpen = true">{{ t('app.help') }}</TButton>
       </div>
     </header>
 
@@ -152,7 +176,7 @@ function onExport(): void {
         <template #a>
           <SplitPane direction="vertical" :default-size="29" :min-size="16" :max-size="60" storage-key="left-top-v2">
             <template #a>
-              <TreePanel @import-file="openFilePicker" @export-file="onExport" />
+              <TreePanel />
             </template>
             <template #b>
               <SplitPane direction="vertical" :default-size="47" :min-size="20" :max-size="80" storage-key="left-bottom-v2">
@@ -175,7 +199,7 @@ function onExport(): void {
             <template #b>
               <CodeEditor v-if="section" :key="`${state.doc?.fileName}:${section.id}:${section.language}`" :section="section" />
               <section v-else class="panel">
-                <div class="empty-hint">载入 .xdb / .xst 文件后在此编辑 ST 源码。</div>
+                <div class="empty-hint">{{ t('app.emptyEditor') }}</div>
               </section>
             </template>
           </SplitPane>
@@ -191,20 +215,22 @@ function onExport(): void {
       >
         {{ state.status.text }}
       </span>
-      <span v-else>就绪。拖拽文件到窗口即可导入。快捷键 Ctrl+S 保存并重新解析。</span>
+      <span v-else>{{ t('app.ready') }}</span>
       <span class="spacer" style="flex: 1 1 auto"></span>
-      <span v-if="state.doc">程序段 {{ state.doc.sections.length }} · 调用 {{ state.calls.length }}</span>
-      <span v-if="state.doc?.warnings.length">解析警告 {{ state.doc.warnings.length }}</span>
+      <span v-if="state.doc">{{ t('app.sectionCalls', { sections: state.doc.sections.length, calls: state.calls.length }) }}</span>
+      <span v-if="state.doc?.warnings.length">{{ t('app.warningCount', { count: state.doc.warnings.length }) }}</span>
     </footer>
 
     <VariableDialog />
-    <TDrawer v-model:visible="helpOpen" header="使用帮助" size="min(760px, 96vw)" :footer="false">
+    <NewBlockDialog v-model:visible="newBlockOpen" @submit="onNewBlockSubmit" />
+    <TDrawer v-model:visible="helpOpen" :header="t('app.helpTitle')" size="min(760px, 96vw)" :footer="false">
       <div class="markdown" v-html="helpHtml"></div>
     </TDrawer>
-    <TDrawer v-model:visible="warningsOpen" header="导出说明" size="min(620px, 96vw)" :footer="false">
-      <p>文件已生成。请核对以下转换或兼容性说明。</p>
+    <TDrawer v-model:visible="warningsOpen" :header="t('app.exportTitle')" size="min(620px, 96vw)" :footer="false">
+      <p>{{ t('app.exportNote') }}</p>
       <ul><li v-for="(warning, index) in exportWarnings" :key="index">{{ warning }}</li></ul>
     </TDrawer>
-    <div v-if="dragActive" class="drop-overlay">松开鼠标导入 .xdb / .xst / .xsy</div>
+    <div v-if="dragActive" class="drop-overlay">{{ t('app.drop') }}</div>
   </div>
+  </TConfigProvider>
 </template>

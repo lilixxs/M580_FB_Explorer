@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { NAME_RE, WIDE_TYPES, type VariableCategory, type VariableDef } from '../types'
 
 export interface AddressInfo {
@@ -53,18 +54,18 @@ export function parseAddress(address: string): AddressInfo {
 
 export function validateVariableName(name: string): string | null {
   const trimmed = name.trim()
-  if (!trimmed) return '变量名不能为空'
+  if (!trimmed) return t('core.validation.nameEmpty')
   if (!NAME_RE.test(trimmed)) {
-    return '变量名只允许字母、数字与下划线（IEC 61131-3 命名规则）'
+    return t('core.validation.nameInvalid')
   }
-  if (['EN', 'ENO'].includes(trimmed.toUpperCase())) return 'EN 和 ENO 为系统引脚，不能新增为普通变量'
+  if (['EN', 'ENO'].includes(trimmed.toUpperCase())) return t('core.validation.nameSystemPin')
   return null
 }
 
 export function validateTypeName(typeName: string): string | null {
   const trimmed = typeName.trim()
-  if (!trimmed) return '数据类型不能为空'
-  if (!validTypeSyntax(trimmed)) return '数据类型格式非法：请输入类型名、STRING[长度] 或 ARRAY[下界..上界] OF 类型'
+  if (!trimmed) return t('core.validation.typeEmpty')
+  if (!validTypeSyntax(trimmed)) return t('core.validation.typeSyntax')
   return null
 }
 
@@ -76,12 +77,14 @@ export function validateAddress(typeName: string, address: string): { errors: st
     return { errors, warnings }
   }
   if (!ADDRESS_RE.test(raw)) {
-    errors.push(`拓扑地址格式非法：${raw}（示例 %MW100、%MW100:8、%MW0.5、%M69）`)
+    errors.push(t('core.validation.addressSyntax', { address: raw }))
     return { errors, warnings }
   }
   const info = parseAddress(raw)
   if (isWideType(typeName) && info.word !== null && info.word % 2 !== 0 && !info.hasBitSuffix) {
-    warnings.push(`32 位变量 ${raw} 的 %MW 地址号为奇数，导出时会自动对齐为 %MW${info.word + 1}`)
+    warnings.push(
+      t('core.validation.oddWideAddress', { address: raw, aligned: `%MW${info.word + 1}` })
+    )
   }
   return { errors, warnings }
 }
@@ -114,7 +117,7 @@ export function validateVariable(
       (item) => item.id !== selfId && item.name.trim().toUpperCase() === trimmedName.toUpperCase()
     )
     if (duplicate) {
-      errors.push(`变量名 ${trimmedName} 与已有变量重复（IEC 作用域内名称必须唯一）`)
+      errors.push(t('core.validation.duplicateName', { name: trimmedName }))
     }
   }
 
@@ -132,7 +135,7 @@ export function validateForExport(variables: VariableDef[]): ValidationReport {
   const seen = new Map<string, VariableCategory>()
 
   if (variables.length === 0) {
-    warnings.push('导出文件中不包含任何变量')
+    warnings.push(t('core.validation.emptyExport'))
   }
 
   for (const variable of variables) {
@@ -144,7 +147,9 @@ export function validateForExport(variables: VariableDef[]): ValidationReport {
     if (!key) continue
     const previous = seen.get(key)
     if (previous && previous !== variable.category) {
-      errors.push(`变量名 ${key} 同时出现在 ${previous} 与 ${variable.category} 分类中`)
+      errors.push(
+        t('core.validation.mixedCategories', { name: key, first: previous, second: variable.category })
+      )
     }
     seen.set(key, variable.category)
   }

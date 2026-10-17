@@ -1,4 +1,5 @@
 /** Structured Text helpers: masking, formatting, call extraction, search and snippets. */
+import { t } from '../i18n'
 import { findLibraryEntry, CONVERSION_TYPE_NAMES as LIBRARY_CONVERSION_TYPE_NAMES } from './functionLibrary'
 
 export const ST_KEYWORDS: string[] = [
@@ -658,7 +659,7 @@ export function searchSource(
   try {
     regex = buildSearchRegex(query, options)
   } catch (error) {
-    return { matches: [], error: `正则表达式无效：${(error as Error).message}` }
+    return { matches: [], error: t('core.st.invalidRegex', { message: (error as Error).message }) }
   }
   const matches: StSearchMatch[] = []
   const lines = source.split('\n')
@@ -690,7 +691,7 @@ export function replaceAllSource(
   try {
     regex = buildSearchRegex(query, options)
   } catch (error) {
-    return { text: source, count: 0, error: `正则表达式无效：${(error as Error).message}` }
+    return { text: source, count: 0, error: t('core.st.invalidRegex', { message: (error as Error).message }) }
   }
   let count = 0
   const text = source.replace(regex, (substring: string, ...args: unknown[]) => {

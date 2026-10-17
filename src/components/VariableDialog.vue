@@ -2,6 +2,8 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { Button as TButton, Dialog as TDialog } from 'tdesign-vue-next'
 import { addVariable, closeVariableEditor, updateVariable } from '../actions'
+import { t } from '../i18n'
+import { localize } from '../localize'
 import { state } from '../store'
 import { CATEGORY_LABELS, CATEGORY_ORDER, emptyVariableInput, type VariableCategory, type VariableInput } from '../types'
 import { validateVariable, validateTypeName } from '../core/validation'
@@ -28,6 +30,16 @@ const customTypeError = ref('')
 
 const elementaryTypes = ELEMENTARY_VARIABLE_TYPES
 const selectedTypeDefinition = computed(() => BASE_TYPE_LIBRARY.definitions.find((item) => item.name === form.typeName.toUpperCase()))
+
+/**
+ * Type description of the bundled library.
+ *
+ * The text is bundled data, not a message key, so it goes through the shared label helper: an
+ * unknown or user defined type is returned unchanged instead of blanking the note.
+ */
+function typeDescription(name: string): string {
+  return localize(BASE_TYPE_LIBRARY.definitions.find((item) => item.name === name)?.description ?? '')
+}
 
 watch(
   () => state.variableEditor,
@@ -159,45 +171,45 @@ function applyCustomType(): void {
 </script>
 
 <template>
-  <TDialog :visible="Boolean(state.variableEditor)" :header="state.variableEditor?.mode === 'edit' ? '修改变量' : '新增变量'" :footer="false" width="min(580px, 94vw)" @close="closeVariableEditor">
+  <TDialog :visible="Boolean(state.variableEditor)" :header="state.variableEditor?.mode === 'edit' ? t('variableDialog.titleEdit') : t('variableDialog.titleAdd')" :footer="false" width="min(580px, 94vw)" @close="closeVariableEditor">
 
       <div class="modal-body">
-        <label for="var-category">分类</label>
+        <label for="var-category">{{ t('variableDialog.category') }}</label>
         <select id="var-category" class="field-select" :value="form.category" @change="pickCategory(($event.target as HTMLSelectElement).value)">
           <option v-for="category in targets" :key="category" :value="category">
-            {{ CATEGORY_LABELS[category] }}
+            {{ localize(CATEGORY_LABELS[category]) }}
           </option>
         </select>
 
-        <label for="var-name">名称</label>
-        <input id="var-name" v-model="form.name" class="field-input mono" placeholder="例如 xStart" />
+        <label for="var-name">{{ t('variableDialog.name') }}</label>
+        <input id="var-name" v-model="form.name" class="field-input mono" :placeholder="t('variableDialog.namePlaceholder')" />
 
-        <label for="var-type">数据类型</label>
+        <label for="var-type">{{ t('variableDialog.typeName') }}</label>
         <div class="type-row">
-          <input id="var-type" v-model="form.typeName" class="field-input mono" placeholder="例如 BOOL、INT、ARRAY[0..9] OF INT" />
-          <button type="button" class="mini-btn" data-testid="open-type-picker" @click="openTypePicker">选择类型</button>
+          <input id="var-type" v-model="form.typeName" class="field-input mono" :placeholder="t('variableDialog.typePlaceholder')" />
+          <button type="button" class="mini-btn" data-testid="open-type-picker" @click="openTypePicker">{{ t('variableDialog.pickType') }}</button>
         </div>
-        <span></span><div class="call-browser-note" data-testid="type-definition">{{ selectedTypeDefinition?.description || '自定义或扩展类型：本轮未核实目标平台支持，请在 Control Expert 中确认。' }}</div>
+        <span></span><div class="call-browser-note" data-testid="type-definition">{{ localize(selectedTypeDefinition?.description ?? '') || t('variableDialog.customTypeNotice') }}</div>
 
-        <label for="var-addr">拓扑地址</label>
-        <input id="var-addr" v-model="form.topologicalAddress" class="field-input mono" placeholder="例如 %MW100（可留空）" />
+        <label for="var-addr">{{ t('variableDialog.address') }}</label>
+        <input id="var-addr" v-model="form.topologicalAddress" class="field-input mono" :placeholder="t('variableDialog.addressPlaceholder')" />
 
-        <label for="var-default">默认值</label>
-        <input id="var-default" v-model="form.defaultValue" class="field-input mono" placeholder="全局变量默认值，例如 0" />
+        <label for="var-default">{{ t('variableDialog.defaultValue') }}</label>
+        <input id="var-default" v-model="form.defaultValue" class="field-input mono" :placeholder="t('variableDialog.defaultValuePlaceholder')" />
 
-        <label for="var-init">初值</label>
-        <input id="var-init" v-model="form.initValue" class="field-input mono" placeholder="功能块局部变量 variableInit" />
+        <label for="var-init">{{ t('variableDialog.initValue') }}</label>
+        <input id="var-init" v-model="form.initValue" class="field-input mono" :placeholder="t('variableDialog.initValuePlaceholder')" />
 
-        <label for="var-comment">注释</label>
-        <input id="var-comment" v-model="form.comment" class="field-input" placeholder="用途说明" />
+        <label for="var-comment">{{ t('variableDialog.comment') }}</label>
+        <input id="var-comment" v-model="form.comment" class="field-input" :placeholder="t('variableDialog.commentPlaceholder')" />
 
         <div v-if="errorText" class="error">{{ errorText }}</div>
         <div v-for="(hint, index) in hints.warnings" :key="index" class="hint">{{ hint }}</div>
-        <div class="hint">32 位变量必须绑定偶数 %MW 地址。页面不会自动修改地址。</div>
+        <div class="hint">{{ t('variableDialog.addressHint') }}</div>
 
-        <div v-if="typePickerOpen" class="type-picker" data-testid="type-picker" role="region" aria-label="选择数据类型">
+        <div v-if="typePickerOpen" class="type-picker" data-testid="type-picker" role="region" :aria-label="t('variableDialog.typePickerAria')">
           <div class="type-picker-head">
-            <span class="type-picker-title">选择数据类型</span>
+            <span class="type-picker-title">{{ t('variableDialog.typePickerTitle') }}</span>
             <span class="spacer"></span>
             <button
               type="button"
@@ -206,7 +218,7 @@ function applyCustomType(): void {
               data-testid="type-mode-basic"
               @click="arrayMode = false"
             >
-              基础类型
+              {{ t('variableDialog.basicTypes') }}
             </button>
             <button
               type="button"
@@ -215,9 +227,9 @@ function applyCustomType(): void {
               data-testid="type-mode-array"
               @click="showArrayMode"
             >
-              数组
+              {{ t('variableDialog.arrayMode') }}
             </button>
-            <button type="button" class="mini-btn" data-testid="type-picker-close" @click="typePickerOpen = false">关闭</button>
+            <button type="button" class="mini-btn" data-testid="type-picker-close" @click="typePickerOpen = false">{{ t('common.close') }}</button>
           </div>
 
           <template v-if="!arrayMode">
@@ -229,43 +241,43 @@ function applyCustomType(): void {
               class="type-chip mono"
               :class="{ 'type-chip--active': form.typeName.trim().toUpperCase() === type }"
               :data-type="type"
-              :title="BASE_TYPE_LIBRARY.definitions.find((item) => item.name === type)?.description || '旧预设；未核实 M580 支持'"
+              :title="typeDescription(type) || t('variableDialog.unverifiedPreset')"
               @click="pickElementaryType(type)"
             >
               {{ type }}
             </button>
           </div>
           <div class="array-form">
-            <label for="type-custom">自定义类型</label>
-            <input id="type-custom" v-model="customType" class="field-input mono" placeholder="例如 MotorStatus、STRING[32]" @input="customTypeError = ''" />
+            <label for="type-custom">{{ t('variableDialog.customType') }}</label>
+            <input id="type-custom" v-model="customType" class="field-input mono" :placeholder="t('variableDialog.customTypePlaceholder')" @input="customTypeError = ''" />
             <div v-if="customTypeError" class="error">{{ customTypeError }}</div>
-            <button type="button" class="mini-btn" data-testid="apply-custom-type" @click="applyCustomType">使用自定义类型</button>
+            <button type="button" class="mini-btn" data-testid="apply-custom-type" @click="applyCustomType">{{ t('variableDialog.applyCustomType') }}</button>
           </div>
           </template>
 
           <div v-else class="array-form">
-            <label for="array-element">元素类型</label>
+            <label for="array-element">{{ t('variableDialog.arrayElement') }}</label>
             <select id="array-element" v-model="arrayElement" class="field-select mono" data-testid="array-element" @change="arrayElementCustom = ''">
               <option v-for="type in elementaryTypes" :key="type" :value="type">{{ type }}</option>
             </select>
 
-            <label for="array-element-custom">自定义元素类型</label>
+            <label for="array-element-custom">{{ t('variableDialog.arrayElementCustom') }}</label>
             <input
               id="array-element-custom"
               v-model="arrayElementCustom"
               class="field-input mono"
-              placeholder="留空则使用上方选择"
+              :placeholder="t('variableDialog.arrayElementCustomPlaceholder')"
               data-testid="array-element-custom"
             />
 
-            <label for="array-lower">下界</label>
+            <label for="array-lower">{{ t('variableDialog.arrayLower') }}</label>
             <input id="array-lower" v-model="arrayLower" class="field-input mono" data-testid="array-lower" />
 
-            <label for="array-upper">上界</label>
+            <label for="array-upper">{{ t('variableDialog.arrayUpper') }}</label>
             <input id="array-upper" v-model="arrayUpper" class="field-input mono" data-testid="array-upper" />
 
             <div v-if="arrayError" class="error" data-testid="array-error">{{ arrayError }}</div>
-            <div class="hint">生成结果：ARRAY[lower..upper] OF 元素类型。</div>
+            <div class="hint">{{ t('variableDialog.arrayHint') }}</div>
             <button
               type="button"
               class="mini-btn"
@@ -273,15 +285,15 @@ function applyCustomType(): void {
               data-testid="apply-array"
               @click="applyArray"
             >
-              生成数组类型
+              {{ t('variableDialog.applyArray') }}
             </button>
           </div>
         </div>
       </div>
 
       <footer class="modal-foot">
-        <TButton size="small" variant="outline" @click="closeVariableEditor">取消</TButton>
-        <TButton size="small" theme="primary" @click="submit">保存</TButton>
+        <TButton size="small" variant="outline" @click="closeVariableEditor">{{ t('common.cancel') }}</TButton>
+        <TButton size="small" theme="primary" @click="submit">{{ t('common.save') }}</TButton>
       </footer>
   </TDialog>
 </template>
