@@ -3,6 +3,8 @@
  * No external dependency and no network access.
  */
 
+import { t } from '../i18n'
+
 export const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 
 export function parseXml(text: string): Document {
@@ -11,10 +13,10 @@ export function parseXml(text: string): Document {
   const errorNode = doc.getElementsByTagName('parsererror')[0]
   if (errorNode) {
     const detail = (errorNode.textContent || '').replace(/\s+/g, ' ').trim()
-    throw new Error(`XML 解析失败：${detail || '未知错误'}`)
+    throw new Error(t('core.xml.parseFailed', { detail: detail || t('core.xml.unknownError') }))
   }
   if (!doc.documentElement) {
-    throw new Error('XML 解析失败：缺少根节点')
+    throw new Error(t('core.xml.missingRoot'))
   }
   return doc
 }

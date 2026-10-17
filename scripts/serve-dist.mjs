@@ -5,7 +5,7 @@ import { resolve, extname, sep } from 'node:path'
 
 const root = resolve('dist')
 const prefix = '/explorer/'
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.ttf': 'font/ttf', '.md': 'text/plain' }
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.ttf': 'font/ttf', '.md': 'text/plain; charset=utf-8', '.png': 'image/png' }
 createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname)

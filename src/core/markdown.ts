@@ -1,4 +1,4 @@
-/** Minimal markdown renderer for the bundled help document. Escapes HTML first. */
+import MarkdownIt from 'markdown-it'
 
 export function escapeHtml(text: string): string {
   return text
@@ -9,126 +9,34 @@ export function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;')
 }
 
-function inline(text: string): string {
-  const codeSpans: string[] = []
-  let result = text.replace(/`([^`]+)`/g, (_match, code: string) => {
-    codeSpans.push(code)
-    return `\u0000CODE${codeSpans.length - 1}\u0000`
-  })
+// 禁止执行原始 HTML。链接使用 markdown-it 的协议校验。
+const renderer = new MarkdownIt({ html: false, linkify: false, typographer: false })
 
-  result = result.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-  result = result.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
-  result = result.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_match, label: string, url: string) => {
-    return `<a href="${url}" target="_blank" rel="noreferrer noopener">${label}</a>`
-  })
+renderer.renderer.rules.fence = (tokens, index) => {
+  const token = tokens[index]
+  const language = token.info.trim().split(/\s+/)[0] || 'text'
+  return `<pre class="md-code"><code data-lang="${escapeHtml(language)}">${escapeHtml(token.content)}</code></pre>\n`
+}
 
-  result = result.replace(/\u0000CODE(\d+)\u0000/g, (_match, index: string) => {
-    return `<code>${codeSpans[Number.parseInt(index, 10)] ?? ''}</code>`
-  })
-  return result
+const renderImage = renderer.renderer.rules.image!
+renderer.renderer.rules.image = (tokens, index, options, env, self) => {
+  const token = tokens[index]
+  const source = String(token.attrGet('src') ?? '')
+  // 只加载随应用发布的截图。拒绝远程资源、路径穿越和任意本地文件。
+  if (!/^images\/(?:zh-CN|en|zh-TW|ja|ko)\/[a-z-]+\.png$/.test(source)) {
+    return escapeHtml(token.content)
+  }
+  token.attrSet('src', `${import.meta.env.BASE_URL}${source}`)
+  token.attrSet('loading', 'lazy')
+  return renderImage(tokens, index, options, env, self)
+}
+
+renderer.renderer.rules.link_open = (tokens, index, options, _env, self) => {
+  tokens[index].attrSet('target', '_blank')
+  tokens[index].attrSet('rel', 'noreferrer noopener')
+  return self.renderToken(tokens, index, options)
 }
 
 export function renderMarkdown(markdown: string): string {
-  const lines = escapeHtml(markdown.replace(/\r\n?/g, '\n')).split('\n')
-  const html: string[] = []
-  let inCode = false
-  let listType: 'ul' | 'ol' | null = null
-  let paragraph: string[] = []
-
-  const flushParagraph = () => {
-    if (paragraph.length > 0) {
-      html.push(`<p>${inline(paragraph.join(' '))}</p>`)
-      paragraph = []
-    }
-  }
-  const closeList = () => {
-    if (listType) {
-      html.push(`</${listType}>`)
-      listType = null
-    }
-  }
-
-  for (const rawLine of lines) {
-    const line = rawLine.replace(/\s+$/, '')
-
-    if (inCode) {
-      if (/^\s*```/.test(line)) {
-        html.push('</code></pre>')
-        inCode = false
-      } else {
-        html.push(line)
-      }
-      continue
-    }
-
-    const fence = /^\s*```(\w*)\s*$/.exec(line)
-    if (fence) {
-      flushParagraph()
-      closeList()
-      html.push(`<pre class="md-code"><code data-lang="${fence[1] || 'text'}">`)
-      inCode = true
-      continue
-    }
-
-    const heading = /^(#{1,6})\s+(.*)$/.exec(line)
-    if (heading) {
-      flushParagraph()
-      closeList()
-      const level = heading[1].length
-      html.push(`<h${level}>${inline(heading[2].trim())}</h${level}>`)
-      continue
-    }
-
-    if (/^\s*(---+|\*\*\*+)\s*$/.test(line)) {
-      flushParagraph()
-      closeList()
-      html.push('<hr />')
-      continue
-    }
-
-    const unordered = /^\s*[-*+]\s+(.*)$/.exec(line)
-    if (unordered) {
-      flushParagraph()
-      if (listType !== 'ul') {
-        closeList()
-        html.push('<ul>')
-        listType = 'ul'
-      }
-      html.push(`<li>${inline(unordered[1].trim())}</li>`)
-      continue
-    }
-
-    const ordered = /^\s*\d+[.)]\s+(.*)$/.exec(line)
-    if (ordered) {
-      flushParagraph()
-      if (listType !== 'ol') {
-        closeList()
-        html.push('<ol>')
-        listType = 'ol'
-      }
-      html.push(`<li>${inline(ordered[1].trim())}</li>`)
-      continue
-    }
-
-    const quote = /^\s*>\s?(.*)$/.exec(line)
-    if (quote) {
-      flushParagraph()
-      closeList()
-      html.push(`<blockquote>${inline(quote[1].trim())}</blockquote>`)
-      continue
-    }
-
-    if (!line.trim()) {
-      flushParagraph()
-      closeList()
-      continue
-    }
-
-    paragraph.push(line.trim())
-  }
-
-  if (inCode) html.push('</code></pre>')
-  flushParagraph()
-  closeList()
-  return html.join('\n')
+  return renderer.render(markdown)
 }

@@ -20,6 +20,10 @@ A browser-based viewer and editor for Schneider M580 Control Expert exchange fil
 - Show variable types and addresses in separate columns with sticky group headings.
 - Insert calls from a two-column function browser backed by JSON library and type files.
 - Link source positions, variable references, variable rows, and function-block pins.
+- Switch between Simplified Chinese, English, Traditional Chinese, Japanese, and Korean with Vue I18n.
+- Create blank function blocks. Confirm or cancel name and comment drafts.
+
+Import and export are available only in the header.
 
 Saving and reparsing clears the section's unsaved marker. The document remains modified until export.
 
@@ -31,7 +35,7 @@ Library data is in `src/data/functionLibraries/`. See [Contributing](CONTRIBUTE.
 
 The workspace combines function-block metadata, call analysis, the pin diagram, the variable table, and the ST editor.
 
-![Workspace](docs/images/workspace.png)
+![Workspace](docs/images/en/workspace.png)
 
 The left side shows file metadata, program calls, and the pin diagram. The right side shows variables and the program editor. Split bars support dragging, double-click reset, and keyboard resizing.
 
@@ -39,7 +43,7 @@ The left side shows file metadata, program calls, and the pin diagram. The right
 
 The variable editor provides fields for the name, type, address, default value, initial value, and comment.
 
-![Variable editor](docs/images/variable-editor.png)
+![Variable editor](docs/images/en/variable-editor.png)
 
 The application checks variable names, duplicates, categories, and address constraints before saving. It does not overwrite the original file.
 
@@ -47,7 +51,7 @@ The application checks variable names, duplicates, categories, and address const
 
 The help drawer documents file formats, editor actions, export rules, and MCP Bridge tools.
 
-![Help drawer](docs/images/help.png)
+Help content and screenshots follow the selected language. The browser remembers the selection.
 
 The MCP Bridge exposes local calls for the current page. The application does not connect to a remote service by default.
 
@@ -83,11 +87,11 @@ npx playwright install chromium
 
 The type picker supports elementary, custom, and array types.
 
-![Type picker](docs/images/type-picker.png)
+![Type picker](docs/images/en/type-picker.png)
 
 The editor toolbar and context menu provide the call browser, with library groups, search, and FB instance selection.
 
-![Call browser](docs/images/call-browser.png)
+![Call browser](docs/images/en/call-browser.png)
 
 ## GitHub Pages
 
@@ -106,6 +110,7 @@ Regenerate the screenshots with:
 ```powershell
 npm run build
 npm run docs:screenshots
+npm run build
 ```
 
 ## Data and security boundaries
@@ -127,7 +132,8 @@ npm run docs:screenshots
 
 - [Contribution guide](CONTRIBUTE.md)
 - [Feature requirements](docs/requirements.md)
-- [Bundled help content](src/data/helpContent.ts)
+- [English help source](requirements/localization/help/en.md)
+- [Help in other languages](requirements/localization/help/)
 
 ## License
 

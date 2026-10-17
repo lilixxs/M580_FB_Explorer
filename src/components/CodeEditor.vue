@@ -22,6 +22,7 @@ import {
 import type { SnippetKind } from '../core/st'
 import { findVariableReferenceAt } from '../core/variableReferences'
 import type { CallInsertPayload } from '../core/functionLibrary'
+import { locale, t } from '../i18n'
 import { state } from '../store'
 import type { ProgramSection } from '../types'
 
@@ -40,6 +41,8 @@ const fallback = ref(false)
 const fallbackReason = ref('')
 
 const editorRef = shallowRef<Monaco.editor.IStandaloneCodeEditor | null>(null)
+/** Kept so a language change can re-register the localized contributions. */
+const monacoRef = shallowRef<typeof Monaco | null>(null)
 
 /** Disposables owned by this component instance; every one is released in onBeforeUnmount. */
 let completionDisposable: Monaco.IDisposable | null = null
@@ -62,7 +65,11 @@ const useRegex = ref(false)
 const matchIndex = ref(-1)
 const matchTotal = ref(0)
 const matchError = ref('')
-const cursorText = ref('行 1 : 列 1')
+/** Caret position, kept as numbers so the caption follows a language change. */
+const cursorPosition = ref({ line: 1, column: 1 })
+const cursorText = computed(() =>
+  t('codeEditor.cursor', { line: cursorPosition.value.line, column: cursorPosition.value.column })
+)
 
 const WORD_SEPARATORS = '~!@#$%^&*()-=+[{]}\\|;:\'",.<>/?'
 
@@ -86,7 +93,7 @@ function sourceTargetReady(): boolean {
 }
 
 function warnNotReady(): void {
-  setStatus('编辑器尚未就绪，请稍候再操作', 'warning')
+  setStatus(t('codeEditor.notReady'), 'warning')
 }
 
 function registerLanguage(monaco: typeof Monaco): void {
@@ -268,7 +275,7 @@ function registerCompletions(monaco: typeof Monaco): void {
 function registerFormatting(monaco: typeof Monaco): void {
   formattingDisposable?.dispose()
   formattingDisposable = monaco.languages.registerDocumentFormattingEditProvider('st', {
-    displayName: 'M580 ST 保守格式化',
+    displayName: t('codeEditor.formatProvider'),
     provideDocumentFormattingEdits(model) {
       const current = model.getValue()
       const formatted = formatSt(current)
@@ -278,25 +285,31 @@ function registerFormatting(monaco: typeof Monaco): void {
   })
 }
 
+/**
+ * Register the editor context menu entries and keybindings.
+ *
+ * `addAction` bakes the label into the context menu registry, so a language change disposes and
+ * re-adds these actions (see `refreshEditorText`). The model and the source are never touched.
+ */
 function addEditorActions(monaco: typeof Monaco, editor: Monaco.editor.IStandaloneCodeEditor): void {
   const descriptors: Monaco.editor.IActionDescriptor[] = [
     {
       id: 'm580.find',
-      label: 'M580：查找与替换',
+      label: t('codeEditor.actions.find'),
       contextMenuGroupId: 'm580',
       contextMenuOrder: 1,
       run: () => focusField(findInputRef.value, 'find')
     },
     {
       id: 'm580.goto',
-      label: 'M580：跳转到行:列',
+      label: t('codeEditor.actions.goto'),
       contextMenuGroupId: 'm580',
       contextMenuOrder: 2,
       run: () => focusField(gotoInputRef.value, 'goto')
     },
     {
       id: 'm580.format',
-      label: 'M580：格式化 ST 源码',
+      label: t('codeEditor.actions.format'),
       contextMenuGroupId: 'm580',
       contextMenuOrder: 3,
       precondition: '!editorReadonly',
@@ -304,7 +317,7 @@ function addEditorActions(monaco: typeof Monaco, editor: Monaco.editor.IStandalo
     },
     {
       id: 'm580.insert.if',
-      label: 'M580：插入 IF 模板',
+      label: t('codeEditor.actions.insertIf'),
       contextMenuGroupId: 'm580',
       contextMenuOrder: 4,
       precondition: '!editorReadonly',
@@ -312,7 +325,7 @@ function addEditorActions(monaco: typeof Monaco, editor: Monaco.editor.IStandalo
     },
     {
       id: 'm580.insert.for',
-      label: 'M580：插入 FOR 模板',
+      label: t('codeEditor.actions.insertFor'),
       contextMenuGroupId: 'm580',
       contextMenuOrder: 5,
       precondition: '!editorReadonly',
@@ -320,7 +333,7 @@ function addEditorActions(monaco: typeof Monaco, editor: Monaco.editor.IStandalo
     },
     {
       id: 'm580.insert.while',
-      label: 'M580：插入 WHILE 模板',
+      label: t('codeEditor.actions.insertWhile'),
       contextMenuGroupId: 'm580',
       contextMenuOrder: 6,
       precondition: '!editorReadonly',
@@ -328,7 +341,7 @@ function addEditorActions(monaco: typeof Monaco, editor: Monaco.editor.IStandalo
     },
     {
       id: 'm580.call',
-      label: 'M580：函数/功能块调用',
+      label: t('codeEditor.actions.call'),
       contextMenuGroupId: 'm580',
       contextMenuOrder: 7,
       precondition: '!editorReadonly',
@@ -336,7 +349,7 @@ function addEditorActions(monaco: typeof Monaco, editor: Monaco.editor.IStandalo
     },
     {
       id: 'm580.save',
-      label: 'M580：保存并重新解析',
+      label: t('codeEditor.actions.save'),
       keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
       contextMenuGroupId: 'm580',
       contextMenuOrder: 8,
@@ -349,9 +362,27 @@ function addEditorActions(monaco: typeof Monaco, editor: Monaco.editor.IStandalo
   }
 }
 
+/**
+ * Re-apply the interface language to the editor chrome.
+ *
+ * Only the disposable contributions are rebuilt: the context menu actions carry their label in the
+ * menu registry and the formatting provider carries a display name. Text already present in the
+ * model, the caret, the undo stack and the dirty flags all stay exactly as they were, so no user
+ * content or pending edit is affected by a language switch.
+ */
+function refreshEditorText(monaco: typeof Monaco | null): void {
+  const editor = editorRef.value
+  if (!monaco || !editor || unmounted) return
+  for (const disposable of actionDisposables) disposable.dispose()
+  actionDisposables = []
+  addEditorActions(monaco, editor)
+  registerFormatting(monaco)
+}
+
 function createEditor(monaco: typeof Monaco): void {
   const host = hostElement.value
   if (!host || unmounted) return
+  monacoRef.value = monaco
   const editor = monaco.editor.create(host, {
     value: props.section.language === 'ST' ? props.section.stSource : props.section.xmlSource,
     language: isSt.value ? 'st' : 'xml',
@@ -382,7 +413,7 @@ function createEditor(monaco: typeof Monaco): void {
     invalidateMatches()
   })
   editor.onDidChangeCursorPosition((event) => {
-    cursorText.value = `行 ${event.position.lineNumber} : 列 ${event.position.column}`
+    cursorPosition.value = { line: event.position.lineNumber, column: event.position.column }
   })
   // Clicking a variable token links the panel selection; it never moves the caret itself.
   mouseDisposable?.dispose()
@@ -451,6 +482,7 @@ onBeforeUnmount(() => {
   loadGeneration += 1
   for (const disposable of actionDisposables) disposable.dispose()
   actionDisposables = []
+  monacoRef.value = null
   formattingDisposable?.dispose()
   formattingDisposable = null
   mouseDisposable?.dispose()
@@ -490,6 +522,10 @@ watch(
     revealLine(jump.line, jump.column)
   }
 )
+
+// A language switch re-labels the context menu entries and the formatting provider. The model,
+// the caret and the undo stack are untouched: no editor or model is created or recreated here.
+watch(locale, () => refreshEditorText(monacoRef.value))
 
 function revealLine(line: number, column: number): void {
   const editor = editorRef.value
@@ -674,7 +710,7 @@ function replaceAll(): void {
 function jumpToPosition(): void {
   const match = /^\s*(\d+)\s*(?::\s*(\d+))?\s*$/.exec(gotoInput.value)
   if (!match) {
-    matchError.value = '行列格式：12 或 12:5'
+    matchError.value = t('codeEditor.gotoFormatError')
     return
   }
   matchError.value = ''
@@ -685,7 +721,7 @@ function jumpToPosition(): void {
 
 function onFormat(): void {
   if (isReadOnly.value) {
-    setStatus('仅 ST 程序段支持格式化', 'warning')
+    setStatus(t('codeEditor.formatOnlySt'), 'warning')
     return
   }
   const editor = editorRef.value
@@ -700,7 +736,7 @@ function onFormat(): void {
   void action
     .run()
     .then(() => {
-      setStatus('已格式化 ST 源码，保存后写回交换文件', 'info')
+      setStatus(t('codeEditor.formatted'), 'info')
       runFind(false)
     })
     .catch(() => {
@@ -831,9 +867,9 @@ function onCallInsert(payload: CallInsertPayload): void {
     })
   }
   if (payload.kind === 'efb') {
-    setStatus(`已插入 ${payload.label} 实例调用；输出请按该功能块的声明读取`, 'info')
+    setStatus(t('codeEditor.insertedEfb', { label: payload.label }), 'info')
   } else {
-    setStatus(`已插入 ${payload.label} 调用；保存后写回交换文件`, 'info')
+    setStatus(t('codeEditor.insertedCall', { label: payload.label }), 'info')
   }
   callDialogVisible.value = false
 }
@@ -1015,7 +1051,7 @@ defineExpose({ revealLine })
     <header class="editor-head">
       <span class="badge" :class="{ 'badge--st': isSt }">{{ isSt ? 'ST' : 'XML' }}</span>
       <span class="name">{{ props.section.name }}</span>
-      <span v-if="dirty" class="dirty">● 未保存</span>
+      <span v-if="dirty" class="dirty">{{ t('codeEditor.unsaved') }}</span>
       <span class="spacer" style="flex: 1 1 auto"></span>
       <span class="count">{{ cursorText }}</span>
       <TButton
@@ -1024,7 +1060,7 @@ defineExpose({ revealLine })
         :disabled="!canSave"
         @click="onSave"
       >
-        保存并重新解析
+        {{ t('codeEditor.save') }}
       </TButton>
     </header>
 
@@ -1034,58 +1070,58 @@ defineExpose({ revealLine })
         v-model="findQuery"
         data-field="find"
         size="small"
-        placeholder="查找"
+        :placeholder="t('codeEditor.findPlaceholder')"
         style="width: 140px"
         @enter="runFind(true)"
       />
-      <button class="mini-btn" title="上一个" @click="step(-1)">↑</button>
-      <button class="mini-btn" title="下一个" @click="step(1)">↓</button>
+      <button class="mini-btn" :title="t('codeEditor.previousMatch')" @click="step(-1)">↑</button>
+      <button class="mini-btn" :title="t('codeEditor.nextMatch')" @click="step(1)">↓</button>
       <span class="match-info">{{ matchInfo }}</span>
-      <label class="count" title="区分大小写"><input v-model="matchCase" type="checkbox" />Aa</label>
-      <label class="count" title="全字匹配"><input v-model="wholeWord" type="checkbox" />W</label>
-      <label class="count" title="正则表达式"><input v-model="useRegex" type="checkbox" />.*</label>
+      <label class="count" :title="t('codeEditor.matchCase')"><input v-model="matchCase" type="checkbox" />Aa</label>
+      <label class="count" :title="t('codeEditor.wholeWord')"><input v-model="wholeWord" type="checkbox" />W</label>
+      <label class="count" :title="t('codeEditor.useRegex')"><input v-model="useRegex" type="checkbox" />.*</label>
       <span class="sep"></span>
       <TInput
         v-model="replaceQuery"
         size="small"
-        placeholder="替换为"
+        :placeholder="t('codeEditor.replacePlaceholder')"
         :disabled="isReadOnly || loading"
         style="width: 140px"
       />
-      <button class="mini-btn" :disabled="isReadOnly || loading" @click="replaceCurrent">替换</button>
-      <button class="mini-btn" :disabled="isReadOnly || loading" @click="replaceAll">全部替换</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" @click="replaceCurrent">{{ t('codeEditor.replace') }}</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" @click="replaceAll">{{ t('codeEditor.replaceAll') }}</button>
       <span class="sep"></span>
       <TInput
         ref="gotoInputRef"
         v-model="gotoInput"
         data-field="goto"
         size="small"
-        placeholder="行:列"
+        :placeholder="t('codeEditor.gotoPlaceholder')"
         style="width: 84px"
         @enter="jumpToPosition"
       />
-      <button class="mini-btn" @click="jumpToPosition">跳转</button>
+      <button class="mini-btn" @click="jumpToPosition">{{ t('codeEditor.goto') }}</button>
       <span class="sep"></span>
-      <button class="mini-btn" :disabled="isReadOnly || loading" @click="onFormat">格式化</button>
-      <button class="mini-btn" :disabled="isReadOnly || loading" title="插入 IF 语句块" @click="insertSnippet('IF')">IF</button>
-      <button class="mini-btn" :disabled="isReadOnly || loading" title="插入 FOR 循环" @click="insertSnippet('FOR')">FOR</button>
-      <button class="mini-btn" :disabled="isReadOnly || loading" title="插入 WHILE 循环" @click="insertSnippet('WHILE')">WHILE</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" @click="onFormat">{{ t('codeEditor.format') }}</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" :title="t('codeEditor.insertIfTitle')" @click="insertSnippet('IF')">IF</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" :title="t('codeEditor.insertForTitle')" @click="insertSnippet('FOR')">FOR</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" :title="t('codeEditor.insertWhileTitle')" @click="insertSnippet('WHILE')">WHILE</button>
       <span class="sep"></span>
       <button
         class="mini-btn"
         :disabled="isReadOnly || loading"
-        title="打开函数/功能块调用面板并在光标处插入"
+        :title="t('codeEditor.openCallDialogTitle')"
         @click="openCallDialog"
       >
-        函数/功能块调用
+        {{ t('codeEditor.openCallDialog') }}
       </button>
     </div>
 
-    <div v-if="loading" class="editor-note">正在加载编辑器…</div>
+    <div v-if="loading" class="editor-note">{{ t('codeEditor.loading') }}</div>
     <div v-else-if="fallback" class="editor-note">
-      Monaco 编辑器加载失败，已降级为原生文本框：无语法高亮、无自动补全。查找、替换、跳转、格式化和模板插入仍然可用。原因：{{ fallbackReason }}
+      {{ t('codeEditor.fallbackNote', { reason: fallbackReason }) }}
     </div>
-    <div v-else-if="isReadOnly" class="editor-note">非 ST 程序段以只读 XML 原文打开；替换、格式化与插入已禁用。</div>
+    <div v-else-if="isReadOnly" class="editor-note">{{ t('codeEditor.readOnlyNote') }}</div>
 
     <div v-show="!fallback" ref="hostElement" class="editor-host"></div>
     <textarea

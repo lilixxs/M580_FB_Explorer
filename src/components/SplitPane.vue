@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
+import { t } from '../i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -126,12 +127,12 @@ onBeforeUnmount(() => {
       role="separator"
       tabindex="0"
       :aria-orientation="props.direction === 'horizontal' ? 'vertical' : 'horizontal'"
-      aria-label="调整面板尺寸"
+      :aria-label="t('splitPane.resizeHandle')"
       :aria-valuenow="Math.round(size)"
       :aria-valuemin="props.minSize"
       :aria-valuemax="props.maxSize"
       :data-dragging="dragging"
-      :title="'拖动调整大小，双击复位，方向键微调'"
+      :title="t('splitPane.resizeHint')"
       @pointerdown="startDrag"
       @dblclick="resetSize"
       @keydown="onKeydown"

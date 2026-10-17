@@ -1360,3 +1360,16 @@ mark {
     z-index: 10;
   }
 }
+.language-select {
+  max-width: 128px;
+  min-width: 104px;
+  width: auto;
+}
+
+.markdown img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 12px 0 20px;
+  border: 1px solid var(--m580-border);
+}

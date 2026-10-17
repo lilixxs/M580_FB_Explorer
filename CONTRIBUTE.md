@@ -41,7 +41,22 @@ npm run docs:screenshots
 - `README.en.md`
 - `CONTRIBUTE.md`（仅当开发流程改变）
 - `docs/requirements.md`
-- `src/data/helpContent.ts`
+- `requirements/localization/help/*.md`（五种语言的帮助真源）
+- `src/locales/*.json`（界面文案与校验提示）
+
+### 多语言维护
+
+使用 Vue I18n 管理界面文案。不要把译文写入组件。
+
+修改中文语言文件后，同步四种译文。保留所有键和命名占位符。
+
+不要翻译用户源码、变量名、注释或 XML 格式值。
+
+`src/data/helpContent.ts` 负责加载独立帮助文件。它不再保存帮助正文。
+
+先运行 `npm run build`。再运行 `npm run docs:screenshots` 生成五种语言的实际界面截图。
+
+最后重新构建，把截图和 `HELP.<语言>.md` 打包到 `dist/`。截图只使用内置示例。
 
 ## 代码规则
 

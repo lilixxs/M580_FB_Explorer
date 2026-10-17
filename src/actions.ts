@@ -1,12 +1,23 @@
+import { reactive } from 'vue'
 import { DEMO_FILES } from './data/demo'
+import { t } from './i18n'
 import { ExportValidationError, buildXdb } from './core/exportXdb'
+import { createEmptyDocument, validateBlockName } from './core/newDocument'
 import { parseExchange } from './core/parseExchange'
 import { setSectionSource } from './core/serialize'
 import { extractRawCalls, isBuiltinFunction, replaceAllSource, formatSt } from './core/st'
 import { extractVariableReferences } from './core/variableReferences'
 import { validateVariable } from './core/validation'
 import { activeSection, state, type StatusType } from './store'
-import type { CallRef, CallKind, ReferenceView, VariableCategory, VariableDef, VariableInput } from './types'
+import type {
+  CallRef,
+  CallKind,
+  ParsedDocument,
+  ReferenceView,
+  VariableCategory,
+  VariableDef,
+  VariableInput
+} from './types'
 import type { StSearchOptions } from './core/st'
 
 let jumpNonce = 0
@@ -40,35 +51,129 @@ function clearDirtyState(): void {
 export function loadExchangeXml(xml: string, fileName: string): boolean {
   try {
     const parsed = parseExchange(xml, fileName)
-    state.doc = parsed
-    state.activeSectionId = parsed.sections[0]?.id ?? ''
-    state.selectedVariableId = ''
-    state.variableSearch = ''
-    state.callSearch = ''
-    state.collapsed = {}
-    state.callsOnlyActiveSection = false
-    state.variableEditor = null
-    state.jump = null
-    clearDirtyState()
-    state.calls = []
-    state.variableReferences = []
-    state.referenceView = 'calls'
-    state.referenceFocusNonce = 0
-    refreshCalls()
+    applyDocument(parsed)
     setStatus(
-      `已载入 ${fileName}：${parsed.sections.length} 个程序段、${parsed.variables.length} 个变量`,
+      t('app.actions.loaded', { fileName, sections: parsed.sections.length, variables: parsed.variables.length }),
       parsed.warnings.length > 0 ? 'warning' : 'success'
     )
     return true
   } catch (error) {
-    setStatus(`导入失败：${(error as Error).message}`, 'error')
+    setStatus(t('app.actions.importFailed', { error: (error as Error).message }), 'error')
     return false
   }
+}
+
+/**
+ * Install a parsed document and reset every view state that belongs to the previous file.
+ *
+ * Shared by import (`loadExchangeXml`) and by the top bar "新建功能块" flow, so a brand new
+ * document starts with the same clean filters, collapsed groups and dialog state as an imported one.
+ */
+function applyDocument(parsed: ParsedDocument): void {
+  state.doc = parsed
+  state.activeSectionId = parsed.sections[0]?.id ?? ''
+  state.selectedVariableId = ''
+  state.variableSearch = ''
+  state.callSearch = ''
+  state.collapsed = {}
+  state.callsOnlyActiveSection = false
+  state.variableEditor = null
+  state.jump = null
+  clearDirtyState()
+  state.calls = []
+  state.variableReferences = []
+  state.referenceView = 'calls'
+  state.referenceFocusNonce = 0
+  // The function block name/comment draft belongs to the document, never to the previous one.
+  resetMetaDraft()
+  refreshCalls()
 }
 
 export function loadDemoFile(index: number): boolean {
   const file = DEMO_FILES[index] ?? DEMO_FILES[0]
   return loadExchangeXml(file.xml, file.fileName)
+}
+
+/**
+ * Draft buffer behind the function block name/comment inputs of the left top panel.
+ *
+ * The panel edits a copy, not the document, so `baseName`/`baseComment` hold the values the draft
+ * was seeded from. A mismatch means the user typed something that is not written to the document
+ * yet; `hasUnexportedChanges` keeps that pending text inside the replace and unload guards.
+ */
+export const metaDraft = reactive({
+  fbName: '',
+  comment: '',
+  baseName: '',
+  baseComment: ''
+})
+
+/** Seed the draft from the current document; also drops a pending draft. */
+export function resetMetaDraft(): void {
+  metaDraft.fbName = state.doc?.fbName ?? ''
+  metaDraft.comment = state.doc?.comment ?? ''
+  metaDraft.baseName = metaDraft.fbName
+  metaDraft.baseComment = metaDraft.comment
+}
+
+/** True while the draft differs from the document, i.e. an unconfirmed name/comment edit exists. */
+export function hasPendingMetaDraft(): boolean {
+  return metaDraft.fbName !== metaDraft.baseName || metaDraft.comment !== metaDraft.baseComment
+}
+
+/** True when anything would be lost by loading another file or closing the page. */
+export function hasUnexportedChanges(): boolean {
+  return state.dirty || hasPendingMetaDraft()
+}
+
+/**
+ * Write the confirmed draft into the document.
+ *
+ * Returns a Chinese message when the name is unusable, otherwise `null`. The document object is the
+ * only thing that changes; the draft is re-seeded from it so the panel shows the committed values.
+ */
+export function commitMetaDraft(): string | null {
+  const doc = state.doc
+  if (!doc) return t('app.actions.needDocument')
+  const name = metaDraft.fbName.trim()
+  const error = validateBlockName(name)
+  if (error) return error
+  const comment = metaDraft.comment.trim()
+  if (doc.fbName !== name || doc.comment !== comment) {
+    doc.fbName = name
+    doc.comment = comment
+    state.dirty = true
+  }
+  resetMetaDraft()
+  setStatus(t('app.tree.updated'), 'success')
+  return null
+}
+
+/** Drop the pending draft and show the document values again. */
+export function discardMetaDraft(): void {
+  resetMetaDraft()
+  setStatus(t('app.tree.cancel'), 'info')
+}
+
+/**
+ * Create an empty function block document from the top bar dialog.
+ *
+ * Returns a Chinese message when the name is unusable, otherwise `null`. The document is marked
+ * dirty because it has never been exported.
+ */
+export function createNewBlockDocument(fbName: string, comment: string): string | null {
+  const error = validateBlockName(fbName)
+  if (error) return error
+  let parsed: ParsedDocument
+  try {
+    parsed = createEmptyDocument({ fbName, comment })
+  } catch (caught) {
+    return (caught as Error).message
+  }
+  applyDocument(parsed)
+  state.dirty = true
+  setStatus(t('app.newBlock.created', { name: parsed.fbName }), 'success')
+  return null
 }
 
 export function selectSection(sectionId: string): void {
@@ -126,7 +231,7 @@ export function saveActiveSection(): boolean {
   const section = activeSection.value
   if (!state.doc || !section) return false
   if (section.language !== 'ST' && !hasDirtyStSections()) {
-    setStatus('非 ST 程序段为只读，不支持保存', 'warning')
+    setStatus(t('app.actions.readOnly'), 'warning')
     return false
   }
 
@@ -148,13 +253,13 @@ export function saveActiveSection(): boolean {
     refreshCalls()
     setStatus(
       sectionsToWrite.length > 1
-        ? `已保存 ${sectionsToWrite.length} 个程序段并重新解析交换文件`
-        : '已保存到页面内存并重新解析；请导出文件以保留修改',
+        ? t('app.actions.savedMultiple', { count: sectionsToWrite.length })
+        : t('app.actions.saved'),
       'success'
     )
     return true
   } catch (error) {
-    setStatus(`保存失败：${(error as Error).message}`, 'error')
+    setStatus(t('app.actions.saveFailed', { error: (error as Error).message }), 'error')
     return false
   }
 }
@@ -168,13 +273,13 @@ function hasDirtyStSections(): boolean {
 export function formatActiveSection(): boolean {
   const section = activeSection.value
   if (!section || section.language !== 'ST') {
-    setStatus('仅 ST 程序段支持格式化', 'warning')
+    setStatus(t('app.actions.formatOnlySt'), 'warning')
     return false
   }
   const formatted = formatSt(section.stSource)
   section.stSource = formatted
   markSectionDirty(section.id)
-  setStatus('已格式化 ST 源码，保存后写回交换文件', 'info')
+  setStatus(t('app.actions.formatted'), 'info')
   return true
 }
 
@@ -185,7 +290,7 @@ export function replaceInActiveSection(
 ): number {
   const section = activeSection.value
   if (!section || section.language !== 'ST') {
-    setStatus('仅 ST 程序段支持替换', 'warning')
+    setStatus(t('app.actions.replaceOnlySt'), 'warning')
     return 0
   }
   const result = replaceAllSource(section.stSource, query, replacement, options)
@@ -195,7 +300,7 @@ export function replaceInActiveSection(
   }
   section.stSource = result.text
   markSectionDirty(section.id)
-  setStatus(`已替换 ${result.count} 处，保存后写回交换文件`, 'info')
+  setStatus(t('app.actions.replaced', { count: result.count }), 'info')
   return result.count
 }
 
@@ -206,7 +311,7 @@ function describeVariableErrors(variable: VariableDef, selfId: string): string |
 }
 
 export function addVariable(input: VariableInput): string | null {
-  if (!state.doc) return '请先导入交换文件'
+  if (!state.doc) return t('app.actions.needDocument')
   variableCounter += 1
   const variable: VariableDef = {
     id: `user-var-${variableCounter}`,
@@ -226,14 +331,14 @@ export function addVariable(input: VariableInput): string | null {
   state.dirty = true
   selectVariable(variable.id, true)
   refreshCalls()
-  setStatus(`已新增变量 ${variable.name}`, 'success')
+  setStatus(t('app.actions.addedVariable', { name: variable.name }), 'success')
   return null
 }
 
 export function updateVariable(id: string, input: VariableInput): string | null {
-  if (!state.doc) return '请先导入交换文件'
+  if (!state.doc) return t('app.actions.needDocument')
   const variable = state.doc.variables.find((item) => item.id === id)
-  if (!variable) return '变量不存在'
+  if (!variable) return t('app.actions.missingVariable')
   const candidate: VariableDef = {
     ...variable,
     name: input.name.trim(),
@@ -260,7 +365,7 @@ export function updateVariable(id: string, input: VariableInput): string | null 
   state.dirty = true
   selectVariable(id, true)
   refreshCalls()
-  setStatus(`已更新变量 ${variable.name}`, 'success')
+  setStatus(t('app.actions.updatedVariable', { name: variable.name }), 'success')
   return null
 }
 
@@ -273,7 +378,7 @@ export function deleteVariable(id: string): boolean {
   state.dirty = true
   if (state.selectedVariableId === id) state.selectedVariableId = ''
   refreshCalls()
-  setStatus(`已删除变量 ${removed.name}`, 'success')
+  setStatus(t('app.actions.deletedVariable', { name: removed.name }), 'success')
   return true
 }
 
@@ -457,36 +562,36 @@ export function linkEditorVariable(variableId: string): void {
 export function jumpToDefinition(call: CallRef): void {
   if (call.kind === 'variable' && call.targetId) {
     selectVariable(call.targetId, true)
-    setStatus(`已定位变量 ${call.targetName}`, 'info')
+    setStatus(t('app.actions.locatedVariable', { name: call.targetName }), 'info')
     return
   }
   if (call.kind === 'section' && call.targetId) {
     selectSection(call.targetId)
     requestJump(1, 1, call.targetId)
-    setStatus(`已切换到程序段 ${call.targetName}`, 'info')
+    setStatus(t('app.actions.selectedSection', { name: call.targetName }), 'info')
     return
   }
-  setStatus(`${call.displayName} 无本地定义（内置函数或外部符号）`, 'info')
+  setStatus(t('app.actions.noDefinition', { name: call.displayName }), 'info')
 }
 
 export function exportXdbText(): { fileName: string; xml: string; warnings: string[] } | null {
   if (!state.doc) {
-    setStatus('请先导入交换文件', 'warning')
+    setStatus(t('app.actions.needDocument'), 'warning')
     return null
   }
   try {
     const result = buildXdb(state.doc, { now: new Date() })
     setStatus(
-      `已生成 ${result.fileName}${result.warnings.length > 0 ? `；${result.warnings.join('；')}` : ''}`,
+      t('app.actions.generated', { fileName: result.fileName, warnings: result.warnings.length > 0 ? `; ${result.warnings.join('; ')}` : '' }),
       result.warnings.length > 0 ? 'warning' : 'success'
     )
     return result
   } catch (error) {
     if (error instanceof ExportValidationError) {
-      setStatus(`导出校验未通过：${error.errors.join('；')}`, 'error')
+      setStatus(t('app.actions.exportInvalid', { error: error.errors.join('; ') }), 'error')
       return null
     }
-    setStatus(`导出失败：${(error as Error).message}`, 'error')
+    setStatus(t('app.actions.exportFailed', { error: (error as Error).message }), 'error')
     return null
   }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import {
   deleteVariable,
   moveVariable,
@@ -9,8 +9,19 @@ import {
   toggleCategory
 } from '../actions'
 import { escapeHtml } from '../core/markdown'
+import { t } from '../i18n'
 import { state, visibleVariableGroups } from '../store'
 import type { VariableCategory, VariableDef } from '../types'
+
+/** Column captions of the variable table, in DOM order. */
+const COLUMNS = computed(() => [
+  t('variablesPanel.columns.name'),
+  t('variablesPanel.columns.type'),
+  t('variablesPanel.columns.address'),
+  t('variablesPanel.columns.init'),
+  t('variablesPanel.columns.comment'),
+  t('variablesPanel.columns.actions')
+])
 
 const searchInput = ref(state.variableSearch)
 const pendingDeleteId = ref('')
@@ -59,11 +70,11 @@ function defaultCategory(): VariableCategory {
 <template>
   <section class="panel">
     <header class="panel-head">
-      <span class="panel-title">变量</span>
+      <span class="panel-title">{{ t('variablesPanel.title') }}</span>
       <span class="count">{{ state.doc?.variables.length ?? 0 }}</span>
       <span class="spacer"></span>
       <button class="mini-btn" :disabled="!state.doc" @click="openVariableEditor('add', defaultCategory())">
-        新增
+        {{ t('variablesPanel.add') }}
       </button>
     </header>
 
@@ -72,18 +83,18 @@ function defaultCategory(): VariableCategory {
         v-model="searchInput"
         class="field-input"
         type="search"
-        aria-label="搜索变量"
-        placeholder="搜索名称 / 类型 / 地址 / 注释"
+        :aria-label="t('variablesPanel.searchAria')"
+        :placeholder="t('variablesPanel.searchPlaceholder')"
         style="flex: 1 1 200px"
         @input="onSearchInput(($event.target as HTMLInputElement).value)"
       />
-      <button class="mini-btn" :disabled="!state.doc" @click="setAllCollapsed(true)">全折叠</button>
-      <button class="mini-btn" :disabled="!state.doc" @click="setAllCollapsed(false)">全展开</button>
+      <button class="mini-btn" :disabled="!state.doc" @click="setAllCollapsed(true)">{{ t('variablesPanel.collapseAll') }}</button>
+      <button class="mini-btn" :disabled="!state.doc" @click="setAllCollapsed(false)">{{ t('variablesPanel.expandAll') }}</button>
     </div>
 
     <div class="panel-body">
-      <div v-if="!state.doc" class="empty-hint">载入文件后在此管理变量。</div>
-      <div v-else-if="visibleVariableGroups.length === 0" class="empty-hint">没有匹配的变量。</div>
+      <div v-if="!state.doc" class="empty-hint">{{ t('variablesPanel.emptyNoDoc') }}</div>
+      <div v-else-if="visibleVariableGroups.length === 0" class="empty-hint">{{ t('variablesPanel.emptyNoMatch') }}</div>
 
       <template v-for="group in visibleVariableGroups" :key="group.category">
         <div class="var-group">
@@ -95,7 +106,7 @@ function defaultCategory(): VariableCategory {
 
           <template v-if="!group.collapsed">
             <div class="variable-columns variable-column-head">
-              <span>变量名</span><span>类型</span><span>地址</span><span>初值</span><span>注释</span><span>操作</span>
+              <span v-for="column in COLUMNS" :key="column">{{ column }}</span>
             </div>
             <div
               v-for="variable in group.items"
@@ -109,7 +120,7 @@ function defaultCategory(): VariableCategory {
               <div class="var-name mono" :title="variable.name" v-html="highlight(variable.name)"></div>
               <div class="var-type mono" :title="variable.typeName">
                 <span v-html="highlight(variable.typeName)"></span>
-                <span v-if="variable.positionPin" class="pin-tag">pin {{ variable.positionPin }}</span>
+                <span v-if="variable.positionPin" class="pin-tag">{{ t('variablesPanel.pinTag', { pin: variable.positionPin }) }}</span>
               </div>
               <div class="var-addr mono" :title="variable.topologicalAddress" v-html="highlight(variable.topologicalAddress || '—')"></div>
               <div class="mono variable-value">{{ variable.initValue || variable.defaultValue || '—' }}</div>
@@ -117,23 +128,23 @@ function defaultCategory(): VariableCategory {
 
               <template v-if="pendingDeleteId === variable.id">
                 <span class="confirm-inline">
-                  删除？
-                  <button class="mini-btn mini-btn--danger" @click.stop="confirmDelete(variable)">确认</button>
-                  <button class="mini-btn" @click.stop="pendingDeleteId = ''">取消</button>
+                  {{ t('variablesPanel.deleteConfirm') }}
+                  <button class="mini-btn mini-btn--danger" @click.stop="confirmDelete(variable)">{{ t('common.confirm') }}</button>
+                  <button class="mini-btn" @click.stop="pendingDeleteId = ''">{{ t('common.cancel') }}</button>
                 </span>
               </template>
               <template v-else>
                 <div class="var-actions">
-                  <button class="mini-btn" title="上移变量" @click.stop="moveVariable(variable.id, -1)">↑</button>
-                  <button class="mini-btn" title="下移变量" @click.stop="moveVariable(variable.id, 1)">↓</button>
+                  <button class="mini-btn" :title="t('variablesPanel.moveUp')" @click.stop="moveVariable(variable.id, -1)">↑</button>
+                  <button class="mini-btn" :title="t('variablesPanel.moveDown')" @click.stop="moveVariable(variable.id, 1)">↓</button>
                   <button
                     class="mini-btn"
-                    title="修改变量"
+                    :title="t('variablesPanel.edit')"
                     @click.stop="openVariableEditor('edit', variable.category, variable.id)"
                   >
-                    改
+                    {{ t('variablesPanel.editShort') }}
                   </button>
-                  <button class="mini-btn" title="删除变量" @click.stop="pendingDeleteId = variable.id">删</button>
+                  <button class="mini-btn" :title="t('variablesPanel.delete')" @click.stop="pendingDeleteId = variable.id">{{ t('variablesPanel.deleteShort') }}</button>
                 </div>
               </template>
             </div>
