@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<FBExchangeFile><fileHeader company="Schneider Automation" product="Unity Pro XL V13.1 - 180823C" dateTime="date_and_time#2026-10-17-11:57:53" content="功能块源文件" DTDVersion="41"></fileHeader><contentHeader name="M580_MBS_TCP_Client" version="0.0.1" dateTime="date_and_time#2026-10-17-11:57:53"></contentHeader><FBSource nameOfFBType="ModbusTCP_Client" version="1.30" dateTime="dt#2026-10-17-11:57:53"><comment>Modbus TCP/RTU 单请求标准读写功能块，封装 READ_VAR 与 WRITE_VAR。</comment><attribute name="TypePassword" value=""></attribute><attribute name="TypeProtectionLevel" value="2#0000_0000"></attribute><attribute name="IsTypePasswordCrypted" value="FALSE"></attribute><inputParameters><variables name="xConnect" typeName="BOOL"><comment>PositionPin 1  连接使能，FALSE 时复位并取消在途请求</comment><attribute name="PositionPin" value="1"></attribute></variables><variables name="xSocketNo" typeName="INT"><comment>PositionPin 2  通道或槽位索引，合法范围 0..15</comment><attribute name="PositionPin" value="2"></attribute></variables><variables name="xIPaddr1" typeName="INT"><comment>PositionPin 3  目标 IPv4 第 1 段，合法范围 1..255</comment><attribute name="PositionPin" value="3"></attribute></variables><variables name="xIPaddr2" typeName="INT"><comment>PositionPin 4  目标 IPv4 第 2 段，合法范围 0..255</comment><attribute name="PositionPin" value="4"></attribute></variables><variables name="xIPaddr3" typeName="INT"><comment>PositionPin 5  目标 IPv4 第 3 段，合法范围 0..255</comment><attribute name="PositionPin" value="5"></attribute></variables><variables name="xIPaddr4" typeName="INT"><comment>PositionPin 6  目标 IPv4 第 4 段，合法范围 1..255</comment><attribute name="PositionPin" value="6"></attribute></variables><variables name="xRemPort" typeName="INT"><comment>PositionPin 7  远端端口，仅接受 502 或 0</comment><attribute name="PositionPin" value="7"></attribute></variables><variables name="xExecute" typeName="BOOL"><comment>PositionPin 8  请求触发信号，上升沿触发</comment><attribute name="PositionPin" value="8"></attribute></variables><variables name="xTimeOut" typeName="INT"><comment>PositionPin 9  超时，单位 100ms，&lt;=0 取默认 3</comment><attribute name="PositionPin" value="9"></attribute></variables><variables name="xUnitID" typeName="INT"><comment>PositionPin 10 从站单元标识符，TCP 0..255，RTU 1..247</comment><attribute name="PositionPin" value="10"></attribute></variables><variables name="xFunction" typeName="INT"><comment>PositionPin 11 功能码，3=读 6=写单字 16=写多字</comment><attribute name="PositionPin" value="11"></attribute></variables><variables name="xRAddress" typeName="DINT"><comment>PositionPin 12 读起始地址，0 基偏移</comment><attribute name="PositionPin" value="12"></attribute></variables><variables name="xRCount" typeName="INT"><comment>PositionPin 13 读取字数，合法范围 1..120</comment><attribute name="PositionPin" value="13"></attribute></variables><variables name="xWAddress" typeName="DINT"><comment>PositionPin 14 写起始地址，0 基偏移</comment><attribute name="PositionPin" value="14"></attribute></variables><variables name="xWCount" typeName="INT"><comment>PositionPin 15 写入字数，合法范围 1..120</comment><attribute name="PositionPin" value="15"></attribute></variables><variables name="xWDataBuf" typeName="ARRAY[0..119] OF INT"><comment>PositionPin 16 待写入数据缓冲区</comment><attribute name="PositionPin" value="16"></attribute></variables></inputParameters><outputParameters><variables name="yLinkDone" typeName="BOOL"><comment>PositionPin 1  链路就绪标志</comment><attribute name="PositionPin" value="1"></attribute></variables><variables name="yLinkCode" typeName="INT"><comment>PositionPin 2  链路状态码，0 正常，负值本地参数错误</comment><attribute name="PositionPin" value="2"></attribute></variables><variables name="yDataDone" typeName="BOOL"><comment>PositionPin 3  单次读写成功标志</comment><attribute name="PositionPin" value="3"></attribute></variables><variables name="yDataCode" typeName="INT"><comment>PositionPin 4  数据事务状态码</comment><attribute name="PositionPin" value="4"></attribute></variables><variables name="yRDataBuf" typeName="ARRAY[0..119] OF INT"><comment>PositionPin 5  读取数据缓冲区</comment><attribute name="PositionPin" value="5"></attribute></variables></outputParameters><publicLocalVariables><variables name="iDevType" typeName="INT"><comment>链路类型，1=Modbus TCP，2=Modbus RTU</comment><variableInit value="1"></variableInit></variables><variables name="sLinkAddr" typeName="STRING[32]"><comment>自定义链路地址，为空时按 xSocketNo 生成</comment></variables><variables name="xBusy" typeName="BOOL"><comment>当前请求通讯进行中标志</comment><variableInit value="0"></variableInit></variables></publicLocalVariables><privateLocalVariables><variables name="aiGest" typeName="ARRAY[0..3] OF INT"><comment>实例独占的 4 字通讯管理数组</comment></variables><variables name="stAddr" typeName="ADDMX_TYPE"><comment>ADDMX 解析输出的地址结构</comment></variables><variables name="aiRecvBuf" typeName="ARRAY[0..119] OF INT"><comment>READ_VAR 内部接收缓冲区</comment></variables><variables name="iState" typeName="INT"><comment>状态机步骤，0=IDLE 10=SUBMIT 20=WAIT</comment></variables><variables name="rtExecute" typeName="R_TRIG"><comment>xExecute 上升沿检测实例</comment></variables><variables name="xInFlight" typeName="BOOL"><comment>事务已提交且等待结果</comment></variables><variables name="xBusySeen" typeName="BOOL"><comment>当前事务已观测到活动位</comment></variables><variables name="xPrevActivity" typeName="BOOL"><comment>上一扫描周期末的活动位</comment></variables><variables name="iNoBusyCnt" typeName="INT"><comment>提交后未观测到活动位的守护扫描计数</comment></variables><variables name="iLatchedFunc" typeName="INT"><comment>当前事务锁存的功能码</comment></variables><variables name="iLatchedAddr" typeName="DINT"><comment>当前事务锁存的起始地址</comment></variables><variables name="iLatchedCount" typeName="INT"><comment>当前事务锁存的读写字数</comment></variables><variables name="sTargetAddr" typeName="STRING[64]"><comment>拼接生成的 ADDMX 输入字符串</comment></variables><variables name="iLinkErr" typeName="INT"><comment>链路校验中间结果</comment></variables><variables name="iNumTmp" typeName="INT"><comment>数值文本化中间量</comment></variables><variables name="sNumTmp" typeName="STRING[8]"><comment>数值文本中间量</comment></variables><variables name="iCopyIdx" typeName="INT"><comment>接收缓冲区拷贝循环下标</comment></variables></privateLocalVariables><FBProgram name="ModbusTCP_Client"><STSource>
+(* ---- 每个扫描周期固定调用边沿检测实例 ---- *)
+rtExecute(CLK := xExecute);
+
+IF NOT xConnect THEN
+    (* ---- 未使能连接：取消在途事务并复位全部状态 ---- *)
+    IF xInFlight AND aiGest[0].0 THEN
+        aiGest[0].1 := 1;                   (* 置取消位 *)
+        IF iLatchedFunc = 3 THEN
+            (* 置位取消位后必须调用一次通讯 EF，系统才激活取消 *)
+            READ_VAR(ADR := stAddr, OBJ := '%MW', NUM := iLatchedAddr, NB := iLatchedCount, GEST := aiGest, RECP => aiRecvBuf);
+        ELSE
+            WRITE_VAR(ADR := stAddr, OBJ := '%MW', NUM := iLatchedAddr, NB := iLatchedCount, EMIS := xWDataBuf, GEST := aiGest);
+        END_IF;
+    END_IF;
+    xInFlight := FALSE;
+    xBusySeen := FALSE;
+    xBusy := FALSE;
+    iNoBusyCnt := 0;
+    iState := 0;
+    yLinkDone := FALSE;
+    yLinkCode := 0;
+    yDataDone := FALSE;
+    yDataCode := 0;
+ELSE
+    (* ---- 使能连接：校验链路参数并拼接 ADDMX 地址字符串 ---- *)
+    iLinkErr := 0;
+    IF (iDevType &lt;> 1) AND (iDevType &lt;> 2) THEN
+        iLinkErr := -1;
+    ELSE
+        (* 链路基址：sLinkAddr 为空时按 xSocketNo 生成 '0.&lt;n>.0' *)
+        IF sLinkAddr = '' THEN
+            IF (xSocketNo &lt; 0) OR (xSocketNo > 15) THEN
+                iLinkErr := -2;
+            ELSE
+                iNumTmp := xSocketNo;
+                sNumTmp := INT_TO_STRING(iNumTmp);
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND ((LEFT_INT(IN := sNumTmp, N := 1) = '+') OR (LEFT_INT(IN := sNumTmp, N := 1) = '-')) DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND (LEFT_INT(IN := sNumTmp, N := 1) = '0') DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                sTargetAddr := CONCAT_STR(IN1 := '0.', IN2 := sNumTmp);
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := '.0');
+            END_IF;
+        ELSE
+            sTargetAddr := sLinkAddr;
+        END_IF;
+
+        IF (iLinkErr = 0) AND (iDevType = 1) THEN
+            (* ---- Modbus TCP：端口固定 502，地址 '&lt;base>{ip1.ip2.ip3.ip4}&lt;unitId>' ---- *)
+            IF (xRemPort &lt;> 502) AND (xRemPort &lt;> 0) THEN
+                iLinkErr := -3;
+            ELSIF (xIPaddr1 &lt; 1) OR (xIPaddr1 > 255) THEN
+                iLinkErr := -4;
+            ELSIF (xIPaddr2 &lt; 0) OR (xIPaddr2 > 255) THEN
+                iLinkErr := -4;
+            ELSIF (xIPaddr3 &lt; 0) OR (xIPaddr3 > 255) THEN
+                iLinkErr := -4;
+            ELSIF (xIPaddr4 &lt; 1) OR (xIPaddr4 > 255) THEN
+                iLinkErr := -4;
+            ELSIF (xUnitID &lt; 0) OR (xUnitID > 255) THEN
+                iLinkErr := -5;
+            ELSE
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := '{');
+                (* 第 1 段 *)
+                iNumTmp := xIPaddr1;
+                sNumTmp := INT_TO_STRING(iNumTmp);
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND ((LEFT_INT(IN := sNumTmp, N := 1) = '+') OR (LEFT_INT(IN := sNumTmp, N := 1) = '-')) DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND (LEFT_INT(IN := sNumTmp, N := 1) = '0') DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := sNumTmp);
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := '.');
+                (* 第 2 段 *)
+                iNumTmp := xIPaddr2;
+                sNumTmp := INT_TO_STRING(iNumTmp);
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND ((LEFT_INT(IN := sNumTmp, N := 1) = '+') OR (LEFT_INT(IN := sNumTmp, N := 1) = '-')) DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND (LEFT_INT(IN := sNumTmp, N := 1) = '0') DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := sNumTmp);
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := '.');
+                (* 第 3 段 *)
+                iNumTmp := xIPaddr3;
+                sNumTmp := INT_TO_STRING(iNumTmp);
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND ((LEFT_INT(IN := sNumTmp, N := 1) = '+') OR (LEFT_INT(IN := sNumTmp, N := 1) = '-')) DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND (LEFT_INT(IN := sNumTmp, N := 1) = '0') DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := sNumTmp);
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := '.');
+                (* 第 4 段 *)
+                iNumTmp := xIPaddr4;
+                sNumTmp := INT_TO_STRING(iNumTmp);
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND ((LEFT_INT(IN := sNumTmp, N := 1) = '+') OR (LEFT_INT(IN := sNumTmp, N := 1) = '-')) DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND (LEFT_INT(IN := sNumTmp, N := 1) = '0') DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := sNumTmp);
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := '}');
+                (* UnitID：TCP 模式下输入 0 时生成 255 *)
+                iNumTmp := xUnitID;
+                IF iNumTmp = 0 THEN
+                    iNumTmp := 255;
+                END_IF;
+                sNumTmp := INT_TO_STRING(iNumTmp);
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND ((LEFT_INT(IN := sNumTmp, N := 1) = '+') OR (LEFT_INT(IN := sNumTmp, N := 1) = '-')) DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND (LEFT_INT(IN := sNumTmp, N := 1) = '0') DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := sNumTmp);
+            END_IF;
+        ELSIF iLinkErr = 0 THEN
+            (* ---- Modbus RTU：地址 '&lt;base>.&lt;unitId>.MBS'，UnitID 合法范围 1..247 ---- *)
+            IF (xUnitID &lt; 1) OR (xUnitID > 247) THEN
+                iLinkErr := -5;
+            ELSE
+                iNumTmp := xUnitID;
+                sNumTmp := INT_TO_STRING(iNumTmp);
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND ((LEFT_INT(IN := sNumTmp, N := 1) = '+') OR (LEFT_INT(IN := sNumTmp, N := 1) = '-')) DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                WHILE (LEN_INT(IN := sNumTmp) > 1) AND (LEFT_INT(IN := sNumTmp, N := 1) = '0') DO
+                    sNumTmp := RIGHT_INT(IN := sNumTmp, N := LEN_INT(IN := sNumTmp) - 1);
+                END_WHILE;
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := '.');
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := sNumTmp);
+                sTargetAddr := CONCAT_STR(IN1 := sTargetAddr, IN2 := '.MBS');
+            END_IF;
+        END_IF;
+    END_IF;
+
+    IF iLinkErr = 0 THEN
+        stAddr := ADDMX(IN := sTargetAddr);
+        yLinkDone := TRUE;
+        yLinkCode := 0;
+    ELSE
+        yLinkDone := FALSE;
+        yLinkCode := iLinkErr;
+    END_IF;
+
+    IF yLinkDone THEN
+        IF iState = 20 THEN
+            (* ---- 等待：本状态内禁止再次调用通讯 EF ---- *)
+            IF aiGest[0].0 THEN
+                xBusySeen := TRUE;
+                xBusy := TRUE;
+                iNoBusyCnt := 0;
+            END_IF;
+            IF (xPrevActivity AND (NOT aiGest[0].0)) OR (xBusySeen AND (NOT aiGest[0].0)) THEN
+                (* 活动位下降沿：事务完成 *)
+                IF aiGest[1] = 0 THEN
+                    yDataDone := TRUE;
+                    yDataCode := 0;
+                    IF iLatchedFunc = 3 THEN
+                        FOR iCopyIdx := 0 TO iLatchedCount - 1 DO
+                            yRDataBuf[iCopyIdx] := aiRecvBuf[iCopyIdx];
+                        END_FOR;
+                    END_IF;
+                ELSE
+                    yDataDone := FALSE;
+                    yDataCode := aiGest[1];
+                END_IF;
+                xInFlight := FALSE;
+                xBusySeen := FALSE;
+                xBusy := FALSE;
+                iNoBusyCnt := 0;
+                iState := 0;
+            ELSIF (NOT xBusySeen) AND (aiGest[1] &lt;> 0) THEN
+                (* 提交后仅返回报告码：立即拒绝 *)
+                yDataDone := FALSE;
+                yDataCode := aiGest[1];
+                xInFlight := FALSE;
+                xBusy := FALSE;
+                iNoBusyCnt := 0;
+                iState := 0;
+            ELSIF NOT xBusySeen THEN
+                (* 提交后始终未观测到活动位：连续 200 周期触发防卡死守护 *)
+                iNoBusyCnt := iNoBusyCnt + 1;
+                IF iNoBusyCnt >= 200 THEN
+                    yDataDone := FALSE;
+                    yDataCode := -104;
+                    xInFlight := FALSE;
+                    xBusy := FALSE;
+                    iNoBusyCnt := 0;
+                    iState := 0;
+                END_IF;
+            END_IF;
+        END_IF;
+
+        (* 新一次触发上升沿清除上一次的数据结果。完成处理先执行，
+           这样完成扫描周期内的上升沿不会丢失。 *)
+        IF rtExecute.Q THEN
+            yDataDone := FALSE;
+            yDataCode := 0;
+        END_IF;
+
+        IF iState = 0 THEN
+            IF rtExecute.Q AND (NOT xInFlight) THEN
+                (* ---- 提交前校验本地请求参数，非法时立即拒绝且不调用通讯 EF ---- *)
+                IF (xFunction &lt;> 3) AND (xFunction &lt;> 6) AND (xFunction &lt;> 16) THEN
+                    yDataDone := FALSE;
+                    yDataCode := -101;
+                ELSIF (xFunction = 3) AND (xRAddress &lt; 0) THEN
+                    yDataDone := FALSE;
+                    yDataCode := -102;
+                ELSIF ((xFunction = 6) OR (xFunction = 16)) AND (xWAddress &lt; 0) THEN
+                    yDataDone := FALSE;
+                    yDataCode := -102;
+                ELSIF (xFunction = 3) AND ((xRCount &lt; 1) OR (xRCount > 120)) THEN
+                    yDataDone := FALSE;
+                    yDataCode := -103;
+                ELSIF ((xFunction = 6) OR (xFunction = 16)) AND ((xWCount &lt; 1) OR (xWCount > 120)) THEN
+                    yDataDone := FALSE;
+                    yDataCode := -103;
+                ELSE
+                    iLatchedFunc := xFunction;
+                    IF xFunction = 3 THEN
+                        iLatchedAddr := xRAddress;
+                        iLatchedCount := xRCount;
+                    ELSE
+                        iLatchedAddr := xWAddress;
+                        iLatchedCount := xWCount;
+                    END_IF;
+                    aiGest[1] := 0;             (* 提交前清零操作报告码 *)
+                    aiGest[3] := 0;             (* 提交前清零交换长度 *)
+                    aiGest[0].1 := 0;           (* 清除上一事务遗留的取消位 *)
+                    IF xTimeOut &lt;= 0 THEN
+                        aiGest[2] := 3;         (* 底层 0 表示无限等待，必须写入默认 3 *)
+                    ELSE
+                        aiGest[2] := xTimeOut;
+                    END_IF;
+                    iNoBusyCnt := 0;
+                    xInFlight := FALSE;
+                    iState := 10;
+                END_IF;
+            END_IF;
+        END_IF;
+
+        IF iState = 10 THEN
+            (* ---- 提交：同一扫描周期内调用一次通讯 EF ---- *)
+            IF iLatchedFunc = 3 THEN
+                READ_VAR(ADR := stAddr, OBJ := '%MW', NUM := iLatchedAddr, NB := iLatchedCount, GEST := aiGest, RECP => aiRecvBuf);
+            ELSE
+                WRITE_VAR(ADR := stAddr, OBJ := '%MW', NUM := iLatchedAddr, NB := iLatchedCount, EMIS := xWDataBuf, GEST := aiGest);
+            END_IF;
+            iState := 20;
+            IF aiGest[0].0 THEN
+                xInFlight := TRUE;
+                xBusySeen := TRUE;
+                xBusy := TRUE;
+            ELSIF aiGest[1] &lt;> 0 THEN
+                (* 激活前被底层立即拒绝：活动位从未拉高，直接透传报告码 *)
+                yDataDone := FALSE;
+                yDataCode := aiGest[1];
+                xInFlight := FALSE;
+                xBusySeen := FALSE;
+                xBusy := FALSE;
+                iState := 0;
+            ELSE
+                (* 尚未观测到活动位：事务已提交，转入守护计数 *)
+                xInFlight := TRUE;
+                xBusySeen := FALSE;
+                xBusy := TRUE;
+            END_IF;
+        END_IF;
+    END_IF;
+END_IF;
+
+(* 每扫描周期末尾保存活动位，供下一周期判定下降沿 *)
+xPrevActivity := aiGest[0].0;
+</STSource></FBProgram></FBSource></FBExchangeFile>
