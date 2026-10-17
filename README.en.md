@@ -16,6 +16,14 @@ A browser-based viewer and editor for Schneider M580 Control Expert exchange fil
 - Display a function-block pin diagram.
 - Export `.xdb` files.
 - Provide a help drawer and a local MCP Bridge stub.
+- Select elementary, custom, and array types with the type picker.
+- Show variable types and addresses in separate columns with sticky group headings.
+- Insert calls from a two-column function browser backed by JSON library and type files.
+- Link source positions, variable references, variable rows, and function-block pins.
+
+Saving and reparsing clears the section's unsaved marker. The document remains modified until export.
+
+Library data is in `src/data/functionLibraries/`. See [Contributing](CONTRIBUTE.md#function-library-and-editor-call-maintenance) for maintenance steps. The legacy snapshot is not a complete official manual.
 
 ## Interface
 
@@ -70,6 +78,24 @@ On Windows, browser tests use Microsoft Edge by default. On other platforms, run
 ```powershell
 npx playwright install chromium
 ```
+
+## Type selection and call insertion
+
+The type picker supports elementary, custom, and array types.
+
+![Type picker](docs/images/type-picker.png)
+
+The editor toolbar and context menu provide the call browser, with library groups, search, and FB instance selection.
+
+![Call browser](docs/images/call-browser.png)
+
+## GitHub Pages
+
+The GitHub Actions workflow runs the type check, unit tests, and production build after every push.
+
+After all checks pass, the workflow publishes `dist/` to GitHub Pages.
+
+Site URL: <https://lilixxs.github.io/M580_FB_Explorer/>
 
 ## Screenshots
 

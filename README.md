@@ -16,6 +16,14 @@
 - 显示功能块引脚调用视图。
 - 导出 `.xdb` 文件。
 - 提供帮助抽屉和本地 MCP Bridge 接口桩。
+- 提供基础类型、自定义类型和数组类型快速选择。
+- 分列显示变量类型与地址，并固定当前变量分类标题。
+- 提供两栏函数/功能块调用弹窗，并从 JSON 加载函数库和类型数据。
+- 联动定位代码、变量引用、变量列表和功能块引脚。
+
+保存并重新解析会清除当前程序段的「未保存」标记。顶栏「有修改」会保留到导出文件。
+
+函数库位于 `src/data/functionLibraries/`。新增库和修改已有内容的方法见 [贡献指南](CONTRIBUTE.md#函数库与编辑器调用内容维护)。基础快照不代表完整官方手册。
 
 ## 界面
 
@@ -34,6 +42,16 @@
 ![变量编辑](docs/images/variable-editor.png)
 
 网页在保存前检查变量名、重复变量、分类和地址约束。网页不会覆盖用户原始文件。
+
+点击「选择类型」可以选择基础类型、自定义类型和数组。
+
+![类型选择](docs/images/type-picker.png)
+
+### 插入调用
+
+编辑器工具栏和右键菜单提供「函数/功能块调用」。弹窗支持函数库分组、搜索和实例选择。
+
+![调用浏览器](docs/images/call-browser.png)
 
 ### 帮助与 MCP
 
@@ -70,6 +88,14 @@ npm run test:e2e
 ```powershell
 npx playwright install chromium
 ```
+
+## GitHub Pages
+
+仓库中的 GitHub Actions 会在每次推送后执行类型检查、单元测试和生产构建。
+
+所有检查通过后，工作流会把 `dist/` 发布到 GitHub Pages。
+
+页面地址：<https://lilixxs.github.io/M580_FB_Explorer/>
 
 ## 截图
 

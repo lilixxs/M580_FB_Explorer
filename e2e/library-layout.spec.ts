@@ -1,0 +1,65 @@
+import { expect, test } from '@playwright/test'
+import { resolve } from 'node:path'
+
+test('variable type/address columns stay separate and group headings stick while scrolling', async ({ page }) => {
+  await page.goto('./')
+  await page.locator('input[type=file]').setInputFiles(resolve(process.cwd(), 'fixtures/ModbusTCP_Client.xdb'))
+  const panel = page.locator('.panel').filter({ has: page.getByRole('searchbox', { name: '搜索变量' }) })
+  const body = panel.locator('.panel-body')
+  const row = panel.locator('.var-row').first()
+  await expect(row.locator('.var-type')).toBeVisible()
+  await expect(row.locator('.var-addr')).toBeVisible()
+  const typeBox = (await row.locator('.var-type').boundingBox())!
+  const addressBox = (await row.locator('.var-addr').boundingBox())!
+  expect(typeBox.x + typeBox.width).toBeLessThanOrEqual(addressBox.x)
+  await expect(panel.locator('.variable-column-head').first()).toContainText('类型')
+  await expect(panel.locator('.variable-column-head').first()).toContainText('地址')
+  const head = panel.locator('.var-group-head').first()
+  expect(await head.evaluate(el => getComputedStyle(el).position)).toBe('sticky')
+  await body.evaluate(el => { el.scrollTop = 80 })
+  await expect.poll(() => body.evaluate(el => el.scrollTop)).toBeGreaterThan(0)
+  const headBox = (await head.boundingBox())!
+  const bodyBox = (await body.boundingBox())!
+  const inset = await body.evaluate(el => parseFloat(getComputedStyle(el).paddingTop))
+  expect(Math.abs(headBox.y - bodyBox.y - inset)).toBeLessThanOrEqual(2)
+  await page.setViewportSize({ width: 1024, height: 900 })
+  expect(await body.evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})
+
+test('official library groups and search insert a verified function at the retained cursor', async ({ page }) => {
+  await page.goto('./')
+  await page.getByRole('button', { name: '示例功能块 .xdb', exact: true }).click()
+  await page.locator('.monaco-editor textarea').focus()
+  await page.keyboard.press('Control+End')
+  await page.keyboard.type('\niState := ')
+  await page.getByRole('button', { name: '函数/功能块调用', exact: true }).click()
+  const dialog = page.getByTestId('function-call-dialog')
+  await dialog.locator('[data-group-filter="arithmetic"]').click()
+  await dialog.getByRole('searchbox', { name: '搜索调用项' }).fill('ABS')
+  await expect(dialog.locator('.call-lib-item')).toHaveCount(1)
+  const entry = dialog.locator('[data-entry-label="ABS"]')
+  await expect(entry).toContainText('33002519.20')
+  await entry.locator('.lib-insert').click()
+  await expect(dialog).not.toBeVisible()
+  await expect(page.locator('.monaco-editor')).toContainText('iState := ABS(value)')
+  await expect(page.locator('.editor-head .dirty')).toBeVisible()
+})
+
+test('call insertion and save also work in the native textarea fallback', async ({ page }) => {
+  await page.route('**/editor.api-*.js', route => route.abort())
+  await page.goto('./')
+  await page.getByRole('button', { name: '示例功能块 .xdb', exact: true }).click()
+  const area = page.locator('.editor-fallback')
+  await expect(area).toBeVisible()
+  await area.fill('iState := ;\n')
+  await area.evaluate((el: HTMLTextAreaElement) => { el.focus(); el.setSelectionRange(10, 10) })
+  await page.getByRole('button', { name: '函数/功能块调用', exact: true }).click()
+  const dialog = page.getByTestId('function-call-dialog')
+  await dialog.getByRole('searchbox', { name: '搜索调用项' }).fill('ABS')
+  await dialog.locator('[data-entry-label="ABS"] .lib-insert').click()
+  await expect(area).toHaveValue('iState := ABS(value);\n')
+  await area.press('Control+s')
+  await expect(page.locator('.editor-head .dirty')).toHaveCount(0)
+  await expect(page.locator('.doc-meta')).toContainText('有修改')
+})

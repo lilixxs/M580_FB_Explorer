@@ -5,6 +5,8 @@ import {
   CATEGORY_LABELS,
   type CallRef,
   type ParsedDocument,
+  type ReferenceView,
+  type VariableAccess,
   type VariableCategory,
   type VariableDef
 } from './types'
@@ -38,6 +40,12 @@ export interface UiState {
   callSearch: string
   callsOnlyActiveSection: boolean
   calls: CallRef[]
+  /** Plain variable uses; kept apart from `calls` so MCP keeps its call semantics. */
+  variableReferences: CallRef[]
+  /** Which list the calls panel shows. */
+  referenceView: ReferenceView
+  /** Bumped when the references view must highlight and scroll to the selected variable. */
+  referenceFocusNonce: number
   collapsed: Record<string, boolean>
   dirty: boolean
   dirtySections: Record<string, boolean>
@@ -57,6 +65,9 @@ export const state = reactive<UiState>({
   callSearch: '',
   callsOnlyActiveSection: false,
   calls: [],
+  variableReferences: [],
+  referenceView: 'calls',
+  referenceFocusNonce: 0,
   collapsed: {},
   dirty: false,
   dirtySections: {},
@@ -106,6 +117,19 @@ export const visibleVariableGroups = computed(() => {
   }))
 })
 
+function groupBySection(items: CallRef[]): Array<{ sectionId: string; sectionName: string; items: CallRef[] }> {
+  const groups: Array<{ sectionId: string; sectionName: string; items: CallRef[] }> = []
+  for (const item of items) {
+    let group = groups.find((entry) => entry.sectionId === item.sectionId)
+    if (!group) {
+      group = { sectionId: item.sectionId, sectionName: item.sectionName, items: [] }
+      groups.push(group)
+    }
+    group.items.push(item)
+  }
+  return groups
+}
+
 export const visibleCalls = computed(() => {
   const query = state.callSearch.trim().toLowerCase()
   return state.calls.filter((call) => {
@@ -115,18 +139,20 @@ export const visibleCalls = computed(() => {
   })
 })
 
-export const callsBySection = computed(() => {
-  const groups: Array<{ sectionId: string; sectionName: string; items: CallRef[] }> = []
-  for (const call of visibleCalls.value) {
-    let group = groups.find((item) => item.sectionId === call.sectionId)
-    if (!group) {
-      group = { sectionId: call.sectionId, sectionName: call.sectionName, items: [] }
-      groups.push(group)
-    }
-    group.items.push(call)
-  }
-  return groups
+export const callsBySection = computed(() => groupBySection(visibleCalls.value))
+
+export const visibleVariableReferences = computed(() => {
+  const query = state.callSearch.trim().toLowerCase()
+  return state.variableReferences.filter((reference) => {
+    if (state.callsOnlyActiveSection && reference.sectionId !== state.activeSectionId) return false
+    if (!query) return true
+    return `${reference.targetName} ${reference.name} ${reference.sectionName} ${reference.access ?? ''}`
+      .toLowerCase()
+      .includes(query)
+  })
 })
+
+export const referencesBySection = computed(() => groupBySection(visibleVariableReferences.value))
 
 export const callStats = computed(() => {
   const stats = { variable: 0, section: 0, builtin: 0, unknown: 0 }
@@ -134,6 +160,21 @@ export const callStats = computed(() => {
   return stats
 })
 
+export const referenceStats = computed(() => {
+  const stats: Record<VariableAccess, number> = { read: 0, write: 0, call: 0 }
+  for (const reference of state.variableReferences) stats[reference.access ?? 'read'] += 1
+  return stats
+})
+
+/** References of the selected variable; drives the "no reference" empty state. */
+export const selectedVariableReferences = computed(() =>
+  state.variableReferences.filter((reference) => reference.targetId === state.selectedVariableId)
+)
+
 export function countActiveCalls(): number {
   return state.calls.filter((call) => call.sectionId === state.activeSectionId).length
+}
+
+export function countActiveReferences(): number {
+  return state.variableReferences.filter((reference) => reference.sectionId === state.activeSectionId).length
 }

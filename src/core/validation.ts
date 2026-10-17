@@ -8,7 +8,21 @@ export interface AddressInfo {
 }
 
 const ADDRESS_RE = /^%[A-Z]{1,3}\d+(?:\.\d+|:\d+)?$/
-const TYPE_RE = /^[A-Za-z0-9_[\].\- ]+$/
+function validTypeSyntax(typeName: string, depth = 0): boolean {
+  if (depth > 32) return false
+  const text = typeName.trim()
+  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(text)) return true
+  const stringType = /^STRING\s*\[\s*(\d+)\s*\]$/i.exec(text)
+  if (stringType) return Number(stringType[1]) >= 1 && Number(stringType[1]) <= 65535
+  const array = /^ARRAY\s*\[([^\]]+)\]\s+OF\s+(.+)$/i.exec(text)
+  if (!array) return false
+  const ranges = array[1].split(',')
+  if (ranges.length > 15) return false
+  return ranges.every((range) => {
+    const bounds = /^\s*(-?\d+)\s*\.\.\s*(-?\d+)\s*$/.exec(range)
+    return bounds && Number.isSafeInteger(Number(bounds[1])) && Number.isSafeInteger(Number(bounds[2])) && Number(bounds[1]) <= Number(bounds[2])
+  }) && validTypeSyntax(array[2], depth + 1)
+}
 
 export function baseTypeName(typeName: string): string {
   const trimmed = typeName.trim().toUpperCase()
@@ -43,13 +57,14 @@ export function validateVariableName(name: string): string | null {
   if (!NAME_RE.test(trimmed)) {
     return '变量名只允许字母、数字与下划线（IEC 61131-3 命名规则）'
   }
+  if (['EN', 'ENO'].includes(trimmed.toUpperCase())) return 'EN 和 ENO 为系统引脚，不能新增为普通变量'
   return null
 }
 
 export function validateTypeName(typeName: string): string | null {
   const trimmed = typeName.trim()
   if (!trimmed) return '数据类型不能为空'
-  if (!TYPE_RE.test(trimmed)) return '数据类型含有非法字符'
+  if (!validTypeSyntax(trimmed)) return '数据类型格式非法：请输入类型名、STRING[长度] 或 ARRAY[下界..上界] OF 类型'
   return null
 }
 
@@ -84,7 +99,10 @@ export function validateVariable(
   const errors: string[] = []
   const warnings: string[] = []
 
-  const nameError = validateVariableName(variable.name)
+  // Preserve imported system parameters, but do not create or rename a normal variable to one.
+  const existingSystemPin = Boolean(selfId && ['EN', 'ENO'].includes(variable.name.trim().toUpperCase()) &&
+    others.some(item => item.id === selfId && item.name.trim().toUpperCase() === variable.name.trim().toUpperCase()))
+  const nameError = existingSystemPin ? null : validateVariableName(variable.name)
   if (nameError) errors.push(nameError)
 
   const typeError = validateTypeName(variable.typeName)
@@ -93,7 +111,7 @@ export function validateVariable(
   const trimmedName = variable.name.trim()
   if (trimmedName) {
     const duplicate = others.find(
-      (item) => item.id !== selfId && item.name.trim() === trimmedName
+      (item) => item.id !== selfId && item.name.trim().toUpperCase() === trimmedName.toUpperCase()
     )
     if (duplicate) {
       errors.push(`变量名 ${trimmedName} 与已有变量重复（IEC 作用域内名称必须唯一）`)
@@ -122,7 +140,7 @@ export function validateForExport(variables: VariableDef[]): ValidationReport {
     errors.push(...report.errors)
     warnings.push(...report.warnings)
 
-    const key = variable.name.trim()
+    const key = variable.name.trim().toUpperCase()
     if (!key) continue
     const previous = seen.get(key)
     if (previous && previous !== variable.category) {

@@ -1,4 +1,5 @@
 /** Structured Text helpers: masking, formatting, call extraction, search and snippets. */
+import { findLibraryEntry, CONVERSION_TYPE_NAMES as LIBRARY_CONVERSION_TYPE_NAMES } from './functionLibrary'
 
 export const ST_KEYWORDS: string[] = [
   'IF',
@@ -90,14 +91,14 @@ export const ST_FUNCTION_COMPLETIONS: StFunctionCompletion[] = [
     kind: 'ef',
     detail: 'READ_VAR(ADR, OBJ, NUM, NB, GEST, RECP =>)  读 %MW',
     insertText:
-      'READ_VAR(ADR := ${1:stAddr}, OBJ := ${2:%MW}, NUM := ${3:0}, NB := ${4:1}, GEST := ${5:aiGest}, RECP => ${6:aiRecv})'
+      "READ_VAR(ADR := ${1:stAddr}, OBJ := ${2:'%MW'}, NUM := ${3:0}, NB := ${4:1}, GEST := ${5:aiGest}, RECP => ${6:aiRecv})"
   },
   {
     label: 'WRITE_VAR',
     kind: 'ef',
     detail: 'WRITE_VAR(ADR, OBJ, NUM, NB, EMIS, GEST)  写 %MW',
     insertText:
-      'WRITE_VAR(ADR := ${1:stAddr}, OBJ := ${2:%MW}, NUM := ${3:0}, NB := ${4:1}, EMIS := ${5:aiEmis}, GEST := ${6:aiGest})'
+      "WRITE_VAR(ADR := ${1:stAddr}, OBJ := ${2:'%MW'}, NUM := ${3:0}, NB := ${4:1}, EMIS := ${5:aiEmis}, GEST := ${6:aiGest})"
   },
   {
     label: 'LEN_INT',
@@ -264,32 +265,7 @@ const BUILTIN_FUNCTIONS = new Set([
 ])
 
 /** Elementary type names accepted on both sides of a `<TYPE>_TO_<TYPE>` conversion name. */
-const CONVERSION_TYPE_NAMES = new Set([
-  'BOOL',
-  'BYTE',
-  'SINT',
-  'USINT',
-  'INT',
-  'UINT',
-  'DINT',
-  'UDINT',
-  'LINT',
-  'ULINT',
-  'WORD',
-  'DWORD',
-  'REAL',
-  'LREAL',
-  'TIME',
-  'DATE',
-  'TOD',
-  'TIME_OF_DAY',
-  'DT',
-  'DATE_AND_TIME',
-  'STRING',
-  'CHAR',
-  'WCHAR',
-  'ANY'
-])
+const CONVERSION_TYPE_NAMES = LIBRARY_CONVERSION_TYPE_NAMES
 
 export interface StSearchOptions {
   caseSensitive?: boolean
@@ -608,7 +584,7 @@ export function isKeyword(name: string): boolean {
  */
 export function isBuiltinFunction(name: string): boolean {
   const upper = name.toUpperCase()
-  if (BUILTIN_FUNCTIONS.has(upper)) return true
+  if (BUILTIN_FUNCTIONS.has(upper) || findLibraryEntry(upper)) return true
   const conversion = /^([A-Z][A-Z0-9_]*)_TO_([A-Z][A-Z0-9_]*)$/.exec(upper)
   if (!conversion) return false
   return CONVERSION_TYPE_NAMES.has(conversion[1]) && CONVERSION_TYPE_NAMES.has(conversion[2])
@@ -631,7 +607,25 @@ export function extractRawCalls(source: string): RawCall[] {
     const owner = match.groups?.owner ?? ''
     if (!name) continue
     if (owner && isKeyword(owner)) continue
-    if (!owner && isKeyword(name)) continue
+    if (!owner && isKeyword(name)) {
+      const upper = name.toUpperCase()
+      // Operators also have library call forms. A top-level comma distinguishes AND(a,b)
+      // from the infix expression a AND (b); NOT has a unary call form.
+      let comma = false
+      let depth = 1
+      let bracket = 0
+      if (['AND', 'OR', 'XOR', 'MOD'].includes(upper)) {
+        for (let i = pattern.lastIndex; i < masked.length && depth > 0; i += 1) {
+          const char = masked[i]
+          if (char === '(') depth += 1
+          else if (char === ')') depth -= 1
+          else if (char === '[') bracket += 1
+          else if (char === ']') bracket -= 1
+          else if (char === ',' && depth === 1 && bracket === 0) { comma = true; break }
+        }
+      }
+      if (!findLibraryEntry(upper) || !(comma || upper === 'NOT')) continue
+    }
     const position = positionAt(source, match.index)
     calls.push({
       name,

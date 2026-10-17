@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { baseTypeName, isWideType, parseAddress, validateForExport, validateVariableName } from '../src/core/validation'
+import { baseTypeName, isWideType, parseAddress, validateForExport, validateVariableName, validateTypeName, validateVariable } from '../src/core/validation'
 import type { VariableDef } from '../src/types'
 
 function variable(partial: Partial<VariableDef>): VariableDef {
@@ -18,6 +18,23 @@ function variable(partial: Partial<VariableDef>): VariableDef {
 }
 
 describe('validation', () => {
+  it('rejects case-insensitive duplicates and new system pin names without blocking imported pins', () => {
+    const existing = variable({ id: 'old', name: 'xRun' })
+    expect(validateVariable(variable({ name: 'XRUN' }), [existing]).errors.join()).toContain('重复')
+    expect(validateForExport([existing, variable({ id: 'new', name: 'XRUN' })]).errors.join()).toContain('重复')
+    for (const name of ['EN', 'en', 'ENO', 'eno']) expect(validateVariableName(name)).toContain('系统引脚')
+    const importedPin = variable({ id: 'pin', name: 'EN' })
+    expect(validateVariable(importedPin, [importedPin], 'pin').errors).toEqual([])
+    expect(validateVariable(variable({ id: 'old', name: 'EN' }), [existing], 'old').errors.join()).toContain('系统引脚')
+  })
+  it('validates custom, string, multidimensional and nested array type syntax', () => {
+    for (const name of ['MotorStatus', 'BOOL', 'STRING[32]', 'ARRAY[-2..4, 1..3] OF DINT', 'ARRAY[0..1] OF ARRAY[0..2] OF MotorStatus']) {
+      expect(validateTypeName(name), name).toBeNull()
+    }
+    for (const name of ['bad name', '1abc', 'ARRAY[4..2] OF INT', 'ARRAY[0..999999999999999999999] OF INT', 'STRING[0]', 'STRING[65536]']) {
+      expect(validateTypeName(name), name).not.toBeNull()
+    }
+  })
   it('accepts IEC 61131-3 names and rejects hyphens, dots and spaces', () => {
     expect(validateVariableName('DB_LJB_B2A_1_DI1')).toBeNull()
     expect(validateVariableName('_tmp')).toBeNull()

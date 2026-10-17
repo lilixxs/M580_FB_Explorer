@@ -1,0 +1,1785 @@
+{
+  "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_enDocType=User+guide&p_File_Name=33002519_K01_000_20.pdf",
+  "documentId": "33002519.20",
+  "documentReference": "33002519K01000",
+  "edition": "09/2020",
+  "applicability": "PDF 第19页 Validity Note：本文档适用于 EcoStruxure Control Expert 15.0 或更高版本。本仓库生成交换文件的固定文件头为 Unity Pro XL V13.1，本目录不构成 V13.1 适配声明。",
+  "scope": "目录完整，签名未全部核实",
+  "title": "EcoStruxure Control Expert Standard Block Library（标准块库）",
+  "extraction": "章节号与页码取自 PDF 书签（level 2），并与 PDF 第3-14页正文目录逐条交叉核对；Part 编号与名称取自正文目录第 I-XIII 部分标题行。",
+  "pageCount": 520,
+  "chapterCount": 162,
+  "partCount": 13,
+  "pageUrlPattern": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_enDocType=User+guide&p_File_Name=33002519_K01_000_20.pdf#page={page}",
+  "otherSections": [
+    {
+      "title": "Safety Information",
+      "page": 15
+    },
+    {
+      "title": "About the Book",
+      "page": 19
+    },
+    {
+      "title": "Appendix A EFB Error Codes and Values",
+      "page": 501
+    },
+    {
+      "title": "Glossary",
+      "page": 505
+    },
+    {
+      "title": "Index",
+      "page": 515
+    }
+  ],
+  "parts": [
+    {
+      "id": "I",
+      "title": "General information",
+      "page": 21,
+      "chapters": [
+        1,
+        2
+      ],
+      "nextPage": 41,
+      "chapterCount": 2
+    },
+    {
+      "id": "II",
+      "title": "Arrays",
+      "page": 41,
+      "chapters": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28
+      ],
+      "nextPage": 125,
+      "chapterCount": 26
+    },
+    {
+      "id": "III",
+      "title": "CLC_INT",
+      "page": 125,
+      "chapters": [
+        29,
+        30,
+        31,
+        32
+      ],
+      "nextPage": 151,
+      "chapterCount": 4
+    },
+    {
+      "id": "IV",
+      "title": "Comparison",
+      "page": 151,
+      "chapters": [
+        33,
+        34,
+        35,
+        36,
+        37,
+        38
+      ],
+      "nextPage": 173,
+      "chapterCount": 6
+    },
+    {
+      "id": "V",
+      "title": "Date & Time",
+      "page": 173,
+      "chapters": [
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "nextPage": 185,
+      "chapterCount": 5
+    },
+    {
+      "id": "VI",
+      "title": "Extract",
+      "page": 185,
+      "chapters": [
+        44,
+        45
+      ],
+      "nextPage": 193,
+      "chapterCount": 2
+    },
+    {
+      "id": "VII",
+      "title": "Logic",
+      "page": 193,
+      "chapters": [
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62
+      ],
+      "nextPage": 231,
+      "chapterCount": 17
+    },
+    {
+      "id": "VIII",
+      "title": "Mathematics",
+      "page": 231,
+      "chapters": [
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88
+      ],
+      "nextPage": 291,
+      "chapterCount": 26
+    },
+    {
+      "id": "IX",
+      "title": "REF",
+      "page": 291,
+      "chapters": [
+        89
+      ],
+      "nextPage": 295,
+      "chapterCount": 1
+    },
+    {
+      "id": "X",
+      "title": "Statistical",
+      "page": 295,
+      "chapters": [
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96
+      ],
+      "nextPage": 319,
+      "chapterCount": 7
+    },
+    {
+      "id": "XI",
+      "title": "Strings",
+      "page": 319,
+      "chapters": [
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106
+      ],
+      "nextPage": 345,
+      "chapterCount": 10
+    },
+    {
+      "id": "XII",
+      "title": "Timer & Counter",
+      "page": 345,
+      "chapters": [
+        107,
+        108,
+        109,
+        110,
+        111,
+        112
+      ],
+      "nextPage": 361,
+      "chapterCount": 6
+    },
+    {
+      "id": "XIII",
+      "title": "Type to type",
+      "page": 361,
+      "chapters": [
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162
+      ],
+      "nextPage": 498,
+      "chapterCount": 50
+    }
+  ],
+  "chapters": [
+    {
+      "number": 1,
+      "page": 23,
+      "title": "Block Types and their Applications",
+      "functionNames": [],
+      "wildcard": false
+    },
+    {
+      "number": 2,
+      "page": 33,
+      "title": "Block Availability on Various Hardware Platforms",
+      "functionNames": [],
+      "wildcard": false
+    },
+    {
+      "number": 3,
+      "page": 43,
+      "title": "ADD_***_***: Addition of a number to elements of an array or addition of two arrays",
+      "functionNames": [
+        "ADD_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 4,
+      "page": 47,
+      "title": "AND_***_***: Logical AND between arrays and variables",
+      "functionNames": [
+        "AND_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 5,
+      "page": 51,
+      "title": "COPY_***_***: Copy on arrays",
+      "functionNames": [
+        "COPY_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 6,
+      "page": 55,
+      "title": "DIV_***_***: Division of arrays",
+      "functionNames": [
+        "DIV_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 7,
+      "page": 59,
+      "title": "EQUAL_***: Comparison of two arrays",
+      "functionNames": [
+        "EQUAL_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 8,
+      "page": 63,
+      "title": "FIND_EQ_***: First element of an array equal to a given value",
+      "functionNames": [
+        "FIND_EQ_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 9,
+      "page": 67,
+      "title": "FIND_EQP_***: First element of an array equal to a value starting from a given rank",
+      "functionNames": [
+        "FIND_EQP_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 10,
+      "page": 71,
+      "title": "FIND_GT_***: First element of an array greater than a given value",
+      "functionNames": [
+        "FIND_GT_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 11,
+      "page": 75,
+      "title": "FIND_LT_***: First element of an array less than a given value",
+      "functionNames": [
+        "FIND_LT_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 12,
+      "page": 79,
+      "title": "LENGTH_***: Length of an array",
+      "functionNames": [
+        "LENGTH_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 13,
+      "page": 83,
+      "title": "MAX_***: Maximum value of array elements",
+      "functionNames": [
+        "MAX_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 14,
+      "page": 85,
+      "title": "MIN_***: Minimum value of array elements",
+      "functionNames": [
+        "MIN_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 15,
+      "page": 87,
+      "title": "MOD_***_***: Remainder of division of arrays",
+      "functionNames": [
+        "MOD_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 16,
+      "page": 91,
+      "title": "MOVE_***_***: Assignment to arrays",
+      "functionNames": [
+        "MOVE_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 17,
+      "page": 93,
+      "title": "MOVE_***_***: Array conversion",
+      "functionNames": [
+        "MOVE_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 18,
+      "page": 95,
+      "title": "MUL_***_***: Multiplication of arrays",
+      "functionNames": [
+        "MUL_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 19,
+      "page": 99,
+      "title": "NOT_***: Logical negation of arrays",
+      "functionNames": [
+        "NOT_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 20,
+      "page": 101,
+      "title": "OCCUR_***: Occurrence of a value in an array",
+      "functionNames": [
+        "OCCUR_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 21,
+      "page": 103,
+      "title": "OR_***_***: Logical OR between arrays and variables",
+      "functionNames": [
+        "OR_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 22,
+      "page": 107,
+      "title": "ROL_***: Rotate shift to left",
+      "functionNames": [
+        "ROL_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 23,
+      "page": 109,
+      "title": "ROR_***: Rotate shift to right",
+      "functionNames": [
+        "ROR_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 24,
+      "page": 111,
+      "title": "SORT_***: Ascending or descending sort",
+      "functionNames": [
+        "SORT_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 25,
+      "page": 113,
+      "title": "SUB_***_***: Subtraction from arrays",
+      "functionNames": [
+        "SUB_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 26,
+      "page": 117,
+      "title": "SUM_***: Sum of array elements",
+      "functionNames": [
+        "SUM_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 27,
+      "page": 119,
+      "title": "SWAP_***: Permutation of the bytes of an array",
+      "functionNames": [
+        "SWAP_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 28,
+      "page": 121,
+      "title": "XOR_***_***: Exclusive OR between arrays",
+      "functionNames": [
+        "XOR_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 29,
+      "page": 127,
+      "title": "Introduction to integer regulation functions",
+      "functionNames": [],
+      "wildcard": false
+    },
+    {
+      "number": 30,
+      "page": 133,
+      "title": "PID_INT: PID controller",
+      "functionNames": [
+        "PID_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 31,
+      "page": 141,
+      "title": "PWM_INT: Pulse width modulation of a numerical value",
+      "functionNames": [
+        "PWM_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 32,
+      "page": 145,
+      "title": "SERVO_INT: Servo drive function",
+      "functionNames": [
+        "SERVO_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 33,
+      "page": 153,
+      "title": "EQ: Equal to",
+      "functionNames": [
+        "EQ"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 34,
+      "page": 155,
+      "title": "GE: Greater than or equal to",
+      "functionNames": [
+        "GE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 35,
+      "page": 159,
+      "title": "GT: Greater than",
+      "functionNames": [
+        "GT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 36,
+      "page": 163,
+      "title": "LE: Less than or equal to",
+      "functionNames": [
+        "LE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 37,
+      "page": 167,
+      "title": "LT: Less than",
+      "functionNames": [
+        "LT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 38,
+      "page": 171,
+      "title": "NE: Not equal to",
+      "functionNames": [
+        "NE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 39,
+      "page": 175,
+      "title": "ADD_***_TIME: Addition of a duration to a date",
+      "functionNames": [
+        "ADD_***_TIME"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 40,
+      "page": 177,
+      "title": "DIVTIME: Division",
+      "functionNames": [
+        "DIVTIME"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 41,
+      "page": 179,
+      "title": "MULTIME: Multiplication",
+      "functionNames": [
+        "MULTIME"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 42,
+      "page": 181,
+      "title": "SUB_***_***: Calculates the time difference between two dates or times",
+      "functionNames": [
+        "SUB_***_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 43,
+      "page": 183,
+      "title": "SUB_***_TIME: Subtraction of a duration from a date",
+      "functionNames": [
+        "SUB_***_TIME"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 44,
+      "page": 187,
+      "title": "EXTRACT: Copy of a variable part into another variable",
+      "functionNames": [
+        "EXTRACT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 45,
+      "page": 191,
+      "title": "SIZEOF: Size of a variable in bytes",
+      "functionNames": [
+        "SIZEOF"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 46,
+      "page": 195,
+      "title": "AND: AND function",
+      "functionNames": [
+        "AND"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 47,
+      "page": 197,
+      "title": "F_TRIG: Falling edge detection",
+      "functionNames": [
+        "F_TRIG"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 48,
+      "page": 199,
+      "title": "FE: Detection of Falling Edge",
+      "functionNames": [
+        "FE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 49,
+      "page": 201,
+      "title": "NOT: Negation",
+      "functionNames": [
+        "NOT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 50,
+      "page": 203,
+      "title": "OR: OR function",
+      "functionNames": [
+        "OR"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 51,
+      "page": 205,
+      "title": "R_TRIG: Rising edge detection",
+      "functionNames": [
+        "R_TRIG"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 52,
+      "page": 207,
+      "title": "RE: Detection of Rising Edge",
+      "functionNames": [
+        "RE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 53,
+      "page": 209,
+      "title": "RESET: Setting of a bit to 0",
+      "functionNames": [
+        "RESET"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 54,
+      "page": 211,
+      "title": "ROL: Rotate left",
+      "functionNames": [
+        "ROL"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 55,
+      "page": 215,
+      "title": "ROR: Rotate right",
+      "functionNames": [
+        "ROR"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 56,
+      "page": 217,
+      "title": "RS: Bistable function block, reset dominant",
+      "functionNames": [
+        "RS"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 57,
+      "page": 219,
+      "title": "SET: Setting of a bit to 1",
+      "functionNames": [
+        "SET"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 58,
+      "page": 221,
+      "title": "SHL: Shift left",
+      "functionNames": [
+        "SHL"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 59,
+      "page": 223,
+      "title": "SHR: Shift right",
+      "functionNames": [
+        "SHR"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 60,
+      "page": 225,
+      "title": "SR: Bistable function block, set dominant",
+      "functionNames": [
+        "SR"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 61,
+      "page": 227,
+      "title": "TRIGGER: Detection of all edges",
+      "functionNames": [
+        "TRIGGER"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 62,
+      "page": 229,
+      "title": "XOR: Exclusive OR function",
+      "functionNames": [
+        "XOR"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 63,
+      "page": 233,
+      "title": "ABS: Absolute value computation",
+      "functionNames": [
+        "ABS"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 64,
+      "page": 235,
+      "title": "ACOS: Arc cosine",
+      "functionNames": [
+        "ACOS"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 65,
+      "page": 237,
+      "title": "ADD: Addition",
+      "functionNames": [
+        "ADD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 66,
+      "page": 239,
+      "title": "ADD_TIME: Addition",
+      "functionNames": [
+        "ADD_TIME"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 67,
+      "page": 241,
+      "title": "ASIN: Arc sine",
+      "functionNames": [
+        "ASIN"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 68,
+      "page": 243,
+      "title": "ATAN: Arc tangent",
+      "functionNames": [
+        "ATAN"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 69,
+      "page": 245,
+      "title": "COS: Cosine",
+      "functionNames": [
+        "COS"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 70,
+      "page": 247,
+      "title": "DEC: Decrementation of a variable",
+      "functionNames": [
+        "DEC"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 71,
+      "page": 249,
+      "title": "DIV: Division",
+      "functionNames": [
+        "DIV"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 72,
+      "page": 253,
+      "title": "DIVMOD: Division and Modulo",
+      "functionNames": [
+        "DIVMOD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 73,
+      "page": 255,
+      "title": "EXP: Natural exponential",
+      "functionNames": [
+        "EXP"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 74,
+      "page": 257,
+      "title": "EXPT_REAL_***: Exponentiation of one value by another value",
+      "functionNames": [
+        "EXPT_REAL_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 75,
+      "page": 261,
+      "title": "INC: Incrementation of a variable",
+      "functionNames": [
+        "INC"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 76,
+      "page": 263,
+      "title": "LN: Natural logarithm",
+      "functionNames": [
+        "LN"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 77,
+      "page": 265,
+      "title": "LOG : Base 10 logarithm",
+      "functionNames": [
+        "LOG"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 78,
+      "page": 267,
+      "title": "MOD: Modulo",
+      "functionNames": [
+        "MOD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 79,
+      "page": 269,
+      "title": "MOVE: Assignment",
+      "functionNames": [
+        "MOVE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 80,
+      "page": 271,
+      "title": "MUL: Multiplication",
+      "functionNames": [
+        "MUL"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 81,
+      "page": 273,
+      "title": "NEG: Negation",
+      "functionNames": [
+        "NEG"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 82,
+      "page": 275,
+      "title": "SATURATION: Saturation",
+      "functionNames": [
+        "SATURATION"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 83,
+      "page": 279,
+      "title": "SIGN: Sign evaluation",
+      "functionNames": [
+        "SIGN"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 84,
+      "page": 281,
+      "title": "SIN: Sine",
+      "functionNames": [
+        "SIN"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 85,
+      "page": 283,
+      "title": "SUB: Subtraction",
+      "functionNames": [
+        "SUB"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 86,
+      "page": 285,
+      "title": "SUB_TIME: Subtraction",
+      "functionNames": [
+        "SUB_TIME"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 87,
+      "page": 287,
+      "title": "SQRT_*** : Square root",
+      "functionNames": [
+        "SQRT_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 88,
+      "page": 289,
+      "title": "TAN: Tangent",
+      "functionNames": [
+        "TAN"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 89,
+      "page": 293,
+      "title": "REF: Reference a variable",
+      "functionNames": [
+        "REF"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 90,
+      "page": 297,
+      "title": "AVE: Averaging",
+      "functionNames": [
+        "AVE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 91,
+      "page": 301,
+      "title": "LIMIT: Limit",
+      "functionNames": [
+        "LIMIT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 92,
+      "page": 305,
+      "title": "LIMIT_IND: Limit with indicator",
+      "functionNames": [
+        "LIMIT_IND"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 93,
+      "page": 309,
+      "title": "MAX: Maximum value function",
+      "functionNames": [
+        "MAX"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 94,
+      "page": 311,
+      "title": "MIN: Minimum value function",
+      "functionNames": [
+        "MIN"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 95,
+      "page": 313,
+      "title": "MUX: Multiplexer",
+      "functionNames": [
+        "MUX"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 96,
+      "page": 317,
+      "title": "SEL: Binary selection",
+      "functionNames": [
+        "SEL"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 97,
+      "page": 321,
+      "title": "CONCAT_STR: Concatenation of two character strings",
+      "functionNames": [
+        "CONCAT_STR"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 98,
+      "page": 323,
+      "title": "DELETE_INT: Deletion of a sub-string of characters",
+      "functionNames": [
+        "DELETE_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 99,
+      "page": 325,
+      "title": "EQUAL_STR: Comparison of two character strings",
+      "functionNames": [
+        "EQUAL_STR"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 100,
+      "page": 327,
+      "title": "FIND_INT: Finding a sub-string of characters",
+      "functionNames": [
+        "FIND_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 101,
+      "page": 329,
+      "title": "INSERT_INT: Insertion of a sub-string of characters",
+      "functionNames": [
+        "INSERT_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 102,
+      "page": 333,
+      "title": "LEFT_INT: Extraction of characters to the left",
+      "functionNames": [
+        "LEFT_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 103,
+      "page": 335,
+      "title": "LEN_INT: Length of character string",
+      "functionNames": [
+        "LEN_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 104,
+      "page": 337,
+      "title": "MID_INT: Extraction of a sub-string of characters",
+      "functionNames": [
+        "MID_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 105,
+      "page": 339,
+      "title": "REPLACE_INT: Replacement of a sub-string of characters",
+      "functionNames": [
+        "REPLACE_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 106,
+      "page": 343,
+      "title": "RIGHT_INT: Extraction of a character string to the right",
+      "functionNames": [
+        "RIGHT_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 107,
+      "page": 347,
+      "title": "CTD, CTD_***: Down counter",
+      "functionNames": [
+        "CTD",
+        "CTD_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 108,
+      "page": 349,
+      "title": "CTU, CTU_***: Up counter",
+      "functionNames": [
+        "CTU",
+        "CTU_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 109,
+      "page": 351,
+      "title": "CTUD, CTUD_***: Up/Down counter",
+      "functionNames": [
+        "CTUD",
+        "CTUD_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 110,
+      "page": 355,
+      "title": "TOF: Off delay",
+      "functionNames": [
+        "TOF"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 111,
+      "page": 357,
+      "title": "TON: On delay",
+      "functionNames": [
+        "TON"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 112,
+      "page": 359,
+      "title": "TP: Pulse",
+      "functionNames": [
+        "TP"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 113,
+      "page": 363,
+      "title": "ARINT_TO_DATE: Convert Integer Array with Date to a DATE Variable",
+      "functionNames": [
+        "ARINT_TO_DATE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 114,
+      "page": 365,
+      "title": "ARINT_TO_DT: Convert Integer Array with Date and Time to a DT Variable",
+      "functionNames": [
+        "ARINT_TO_DT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 115,
+      "page": 367,
+      "title": "ARINT_TO_TOD: Convert Integer Array with Time Of Day to a TOD Variable",
+      "functionNames": [
+        "ARINT_TO_TOD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 116,
+      "page": 369,
+      "title": "ASCII_TO_STRING: Type conversion",
+      "functionNames": [
+        "ASCII_TO_STRING"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 117,
+      "page": 373,
+      "title": "ASCII_TO_STRING_INV: Type conversion",
+      "functionNames": [
+        "ASCII_TO_STRING_INV"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 118,
+      "page": 379,
+      "title": "BCD_TO_INT: Conversion of a BCD integer into pure binary",
+      "functionNames": [
+        "BCD_TO_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 119,
+      "page": 381,
+      "title": "BIT_TO_BYTE: Type conversion",
+      "functionNames": [
+        "BIT_TO_BYTE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 120,
+      "page": 385,
+      "title": "BIT_TO_WORD: Type conversion",
+      "functionNames": [
+        "BIT_TO_WORD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 121,
+      "page": 389,
+      "title": "BOOL_TO_***: Type conversion",
+      "functionNames": [
+        "BOOL_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 122,
+      "page": 391,
+      "title": "BYTE_AS_WORD: Type conversion",
+      "functionNames": [
+        "BYTE_AS_WORD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 123,
+      "page": 393,
+      "title": "BYTE_TO_BIT: Type conversion",
+      "functionNames": [
+        "BYTE_TO_BIT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 124,
+      "page": 397,
+      "title": "BYTE_TO_***: Type conversion",
+      "functionNames": [
+        "BYTE_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 125,
+      "page": 401,
+      "title": "DATE_TO_ARINT: Convert DATE Variable to Integer Array",
+      "functionNames": [
+        "DATE_TO_ARINT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 126,
+      "page": 403,
+      "title": "DATE_TO_STRING: Conversion of a variable in DATE format into a character string",
+      "functionNames": [
+        "DATE_TO_STRING"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 127,
+      "page": 405,
+      "title": "DBCD_TO_***: Conversion of a double BCD integer into binary",
+      "functionNames": [
+        "DBCD_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 128,
+      "page": 407,
+      "title": "DEG_TO_RAD : Conversion of degrees to radians",
+      "functionNames": [
+        "DEG_TO_RAD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 129,
+      "page": 409,
+      "title": "DINT_AS_WORD: Type conversion",
+      "functionNames": [
+        "DINT_AS_WORD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 130,
+      "page": 411,
+      "title": "DINT_TO_***: Type conversion",
+      "functionNames": [
+        "DINT_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 131,
+      "page": 415,
+      "title": "DINT_TO_DBCD: Conversion of a double binary coded integer into a double Binary Coded Decimal integer",
+      "functionNames": [
+        "DINT_TO_DBCD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 132,
+      "page": 417,
+      "title": "DT_TO_ARINT: Convert DT Variable to Integer Array",
+      "functionNames": [
+        "DT_TO_ARINT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 133,
+      "page": 419,
+      "title": "DT_TO_STRING: Conversion of a variable in DT format into a character string",
+      "functionNames": [
+        "DT_TO_STRING"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 134,
+      "page": 421,
+      "title": "DWORD_TO_***: Type conversion",
+      "functionNames": [
+        "DWORD_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 135,
+      "page": 423,
+      "title": "GRAY_TO_INT: Conversion of an integer in Gray code into a binary coded integer",
+      "functionNames": [
+        "GRAY_TO_INT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 136,
+      "page": 425,
+      "title": "INT_AS_DINT: Concatenation of two integers to form a double integer",
+      "functionNames": [
+        "INT_AS_DINT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 137,
+      "page": 427,
+      "title": "INT_TO_***: Type conversion",
+      "functionNames": [
+        "INT_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 138,
+      "page": 431,
+      "title": "INT_TO_BCD: Conversion of a binary coded integer into a Binary Coded Decimal integer",
+      "functionNames": [
+        "INT_TO_BCD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 139,
+      "page": 433,
+      "title": "INT_TO_DBCD: Conversion of a binary coded integer into a double Binary Coded Decimal integer",
+      "functionNames": [
+        "INT_TO_DBCD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 140,
+      "page": 435,
+      "title": "RAD_TO_DEG: Conversion of radians to degrees",
+      "functionNames": [
+        "RAD_TO_DEG"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 141,
+      "page": 437,
+      "title": "REAL_AS_WORD: Type conversion",
+      "functionNames": [
+        "REAL_AS_WORD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 142,
+      "page": 439,
+      "title": "REAL_TO_***: Type conversion",
+      "functionNames": [
+        "REAL_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 143,
+      "page": 443,
+      "title": "REAL_TRUNC_***: Type conversion",
+      "functionNames": [
+        "REAL_TRUNC_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 144,
+      "page": 445,
+      "title": "STRING_TO_ASCII: Type conversion",
+      "functionNames": [
+        "STRING_TO_ASCII"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 145,
+      "page": 451,
+      "title": "STRING_TO_ASCII_INV: Type conversion",
+      "functionNames": [
+        "STRING_TO_ASCII_INV"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 146,
+      "page": 457,
+      "title": "STRING_TO_*** : Conversion of a character string to a number of the INT, DINT or REAL type",
+      "functionNames": [
+        "STRING_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 147,
+      "page": 461,
+      "title": "TIME_AS_WORD: Type conversion",
+      "functionNames": [
+        "TIME_AS_WORD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 148,
+      "page": 463,
+      "title": "TIME_TO_***: Type conversion",
+      "functionNames": [
+        "TIME_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 149,
+      "page": 465,
+      "title": "TIME_TO_STRING: Conversion of a variable in TIME format into a character string",
+      "functionNames": [
+        "TIME_TO_STRING"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 150,
+      "page": 467,
+      "title": "TOD_TO_ARINT: Convert TOD Variable to Integer Array",
+      "functionNames": [
+        "TOD_TO_ARINT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 151,
+      "page": 469,
+      "title": "TOD_TO_STRING: Conversion of a variable in TOD format into a character string",
+      "functionNames": [
+        "TOD_TO_STRING"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 152,
+      "page": 471,
+      "title": "UDINT_AS_WORD: Type conversion",
+      "functionNames": [
+        "UDINT_AS_WORD"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 153,
+      "page": 473,
+      "title": "UDINT_TO_***: Type conversion",
+      "functionNames": [
+        "UDINT_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 154,
+      "page": 477,
+      "title": "UINT_TO_***: Type conversion",
+      "functionNames": [
+        "UINT_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 155,
+      "page": 481,
+      "title": "WORD_AS_BYTE: Type conversion",
+      "functionNames": [
+        "WORD_AS_BYTE"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 156,
+      "page": 483,
+      "title": "WORD_AS_DINT: Type conversion",
+      "functionNames": [
+        "WORD_AS_DINT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 157,
+      "page": 485,
+      "title": "WORD_AS_REAL: Type conversion",
+      "functionNames": [
+        "WORD_AS_REAL"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 158,
+      "page": 487,
+      "title": "WORD_AS_TIME: Type conversion",
+      "functionNames": [
+        "WORD_AS_TIME"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 159,
+      "page": 489,
+      "title": "WORD_AS_UDINT: Type conversion",
+      "functionNames": [
+        "WORD_AS_UDINT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 160,
+      "page": 491,
+      "title": "WORD_TO_BIT: Type conversion",
+      "functionNames": [
+        "WORD_TO_BIT"
+      ],
+      "wildcard": false
+    },
+    {
+      "number": 161,
+      "page": 495,
+      "title": "WORD_TO_***: Type conversion",
+      "functionNames": [
+        "WORD_TO_***"
+      ],
+      "wildcard": true
+    },
+    {
+      "number": 162,
+      "page": 497,
+      "title": "***_TO_STRING: Conversion of a variable into a character string",
+      "functionNames": [
+        "***_TO_STRING"
+      ],
+      "wildcard": true
+    }
+  ],
+  "verification": {
+    "printedParts": 13,
+    "printedChapters": 162,
+    "chapterNumbers1to162": true,
+    "bookmarkParts": 13,
+    "bookmarkChapters": 162,
+    "bookmarkChapterTitlesMatchPrintedToc": [],
+    "bookmarkChapterTitlesMissing": [],
+    "chaptersAssignedToParts": 162,
+    "wildcardChapters": 48
+  }
+}

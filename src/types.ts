@@ -81,6 +81,9 @@ export interface ExportResult {
 
 export type CallKind = 'variable' | 'section' | 'builtin' | 'unknown'
 
+/** How a declared variable is used at one source position. */
+export type VariableAccess = 'read' | 'write' | 'call'
+
 export interface CallRef {
   id: string
   sectionId: string
@@ -94,7 +97,17 @@ export interface CallRef {
   targetName: string
   targetId: string
   snippet: string
+  /**
+   * True for a plain variable use kept in `state.variableReferences`. Call references leave this
+   * unset so the MCP `state.calls` payload keeps its historical shape.
+   */
+  reference?: boolean
+  /** Read/write/call classification of a variable reference. */
+  access?: VariableAccess
 }
+
+/** Which list the calls panel shows. */
+export type ReferenceView = 'calls' | 'references'
 
 export interface ParseErrorInfo {
   message: string
