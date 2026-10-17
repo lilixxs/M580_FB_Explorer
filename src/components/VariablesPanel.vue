@@ -4,7 +4,7 @@ import {
   deleteVariable,
   moveVariable,
   openVariableEditor,
-  selectVariable,
+  revealVariable,
   setAllCollapsed,
   toggleCategory
 } from '../actions'
@@ -86,55 +86,59 @@ function defaultCategory(): VariableCategory {
       <div v-else-if="visibleVariableGroups.length === 0" class="empty-hint">没有匹配的变量。</div>
 
       <template v-for="group in visibleVariableGroups" :key="group.category">
-        <button class="var-group-head" @click="toggleCategory(group.category)">
-          <span class="arrow">{{ group.collapsed ? '▸' : '▾' }}</span>
-          <span class="grow">{{ group.label }}</span>
-          <span class="count">{{ group.items.length }}</span>
-        </button>
+        <div class="var-group">
+          <button class="var-group-head" @click="toggleCategory(group.category)">
+            <span class="arrow">{{ group.collapsed ? '▸' : '▾' }}</span>
+            <span class="grow">{{ group.label }}</span>
+            <span class="count">{{ group.items.length }}</span>
+          </button>
 
-        <template v-if="!group.collapsed">
-          <div class="variable-columns variable-column-head"><span>变量名</span><span>类型 / 地址</span><span>初值</span><span>注释</span><span>操作</span></div>
-          <div
-            v-for="variable in group.items"
-            :key="variable.id"
-            class="var-row variable-columns"
-            :class="{ 'var-row--active': variable.id === state.selectedVariableId }"
-            :data-var-id="variable.id"
-            @click="selectVariable(variable.id)"
-            @dblclick="openVariableEditor('edit', variable.category, variable.id)"
-          >
+          <template v-if="!group.collapsed">
+            <div class="variable-columns variable-column-head">
+              <span>变量名</span><span>类型</span><span>地址</span><span>初值</span><span>注释</span><span>操作</span>
+            </div>
+            <div
+              v-for="variable in group.items"
+              :key="variable.id"
+              class="var-row variable-columns"
+              :class="{ 'var-row--active': variable.id === state.selectedVariableId }"
+              :data-var-id="variable.id"
+              @click="revealVariable(variable.id)"
+              @dblclick="openVariableEditor('edit', variable.category, variable.id)"
+            >
               <div class="var-name mono" :title="variable.name" v-html="highlight(variable.name)"></div>
-              <div class="var-meta">
+              <div class="var-type mono" :title="variable.typeName">
                 <span v-html="highlight(variable.typeName)"></span>
-                <span v-if="variable.topologicalAddress" class="addr" v-html="highlight(variable.topologicalAddress)"></span>
-                <span v-if="variable.positionPin">pin {{ variable.positionPin }}</span>
+                <span v-if="variable.positionPin" class="pin-tag">pin {{ variable.positionPin }}</span>
               </div>
-            <div class="mono variable-value">{{ variable.initValue || variable.defaultValue || '—' }}</div>
-            <div class="variable-comment" :title="variable.comment">{{ variable.comment || '—' }}</div>
+              <div class="var-addr mono" :title="variable.topologicalAddress" v-html="highlight(variable.topologicalAddress || '—')"></div>
+              <div class="mono variable-value">{{ variable.initValue || variable.defaultValue || '—' }}</div>
+              <div class="variable-comment" :title="variable.comment">{{ variable.comment || '—' }}</div>
 
-            <template v-if="pendingDeleteId === variable.id">
-              <span class="confirm-inline">
-                删除？
-                <button class="mini-btn mini-btn--danger" @click.stop="confirmDelete(variable)">确认</button>
-                <button class="mini-btn" @click.stop="pendingDeleteId = ''">取消</button>
-              </span>
-            </template>
-            <template v-else>
-              <div class="var-actions">
-                <button class="mini-btn" title="上移变量" @click.stop="moveVariable(variable.id, -1)">↑</button>
-                <button class="mini-btn" title="下移变量" @click.stop="moveVariable(variable.id, 1)">↓</button>
-                <button
-                  class="mini-btn"
-                  title="修改变量"
-                  @click.stop="openVariableEditor('edit', variable.category, variable.id)"
-                >
-                  改
-                </button>
-                <button class="mini-btn" title="删除变量" @click.stop="pendingDeleteId = variable.id">删</button>
-              </div>
-            </template>
-          </div>
-        </template>
+              <template v-if="pendingDeleteId === variable.id">
+                <span class="confirm-inline">
+                  删除？
+                  <button class="mini-btn mini-btn--danger" @click.stop="confirmDelete(variable)">确认</button>
+                  <button class="mini-btn" @click.stop="pendingDeleteId = ''">取消</button>
+                </span>
+              </template>
+              <template v-else>
+                <div class="var-actions">
+                  <button class="mini-btn" title="上移变量" @click.stop="moveVariable(variable.id, -1)">↑</button>
+                  <button class="mini-btn" title="下移变量" @click.stop="moveVariable(variable.id, 1)">↓</button>
+                  <button
+                    class="mini-btn"
+                    title="修改变量"
+                    @click.stop="openVariableEditor('edit', variable.category, variable.id)"
+                  >
+                    改
+                  </button>
+                  <button class="mini-btn" title="删除变量" @click.stop="pendingDeleteId = variable.id">删</button>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
       </template>
     </div>
   </section>

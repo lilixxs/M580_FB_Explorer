@@ -1,0 +1,164 @@
+{
+  "kind": "functions",
+  "name": "M580 基础函数库快照",
+  "version": "base-1.0.0",
+  "note": "基础库快照：内容逐项取自 src/core/st.ts 的 ST_FUNCTION_COMPLETIONS（21 项）。它只是本项目当前内置的补全条目，不包含施耐德 Control Expert 官方完整函数手册，也不代表 M580 可用的全部 EF/EFB。",
+  "entries": [
+    {
+      "label": "ADDMX",
+      "kind": "ef",
+      "detail": "ADDMX(IN : STRING) : ADDMX_TYPE  解析链路地址",
+      "insertText": "ADDMX(IN := ${1:sLinkAddress})"
+    },
+    {
+      "label": "READ_VAR",
+      "kind": "ef",
+      "detail": "READ_VAR(ADR, OBJ, NUM, NB, GEST, RECP =>)  读 %MW",
+      "insertText": "READ_VAR(ADR := ${1:stAddr}, OBJ := ${2:'%MW'}, NUM := ${3:0}, NB := ${4:1}, GEST := ${5:aiGest}, RECP => ${6:aiRecv})"
+    },
+    {
+      "label": "WRITE_VAR",
+      "kind": "ef",
+      "detail": "WRITE_VAR(ADR, OBJ, NUM, NB, EMIS, GEST)  写 %MW",
+      "insertText": "WRITE_VAR(ADR := ${1:stAddr}, OBJ := ${2:'%MW'}, NUM := ${3:0}, NB := ${4:1}, EMIS := ${5:aiEmis}, GEST := ${6:aiGest})"
+    },
+    {
+      "label": "LEN_INT",
+      "kind": "function",
+      "detail": "LEN_INT(IN : STRING) : INT  字符串长度",
+      "insertText": "LEN_INT(IN := ${1:sText})"
+    },
+    {
+      "label": "LEFT_INT",
+      "kind": "function",
+      "detail": "LEFT_INT(IN : STRING, N : INT) : STRING  取左侧 N 个字符",
+      "insertText": "LEFT_INT(IN := ${1:sText}, N := ${2:1})"
+    },
+    {
+      "label": "RIGHT_INT",
+      "kind": "function",
+      "detail": "RIGHT_INT(IN : STRING, N : INT) : STRING  取右侧 N 个字符",
+      "insertText": "RIGHT_INT(IN := ${1:sText}, N := ${2:1})"
+    },
+    {
+      "label": "CONCAT_STR",
+      "kind": "function",
+      "detail": "CONCAT_STR(IN1 : STRING, IN2 : STRING) : STRING  拼接两个字符串",
+      "insertText": "CONCAT_STR(IN1 := ${1:sLeft}, IN2 := ${2:sRight})"
+    },
+    {
+      "label": "INT_TO_STRING",
+      "kind": "function",
+      "detail": "INT_TO_STRING(IN : INT) : STRING  整数转字符串",
+      "insertText": "INT_TO_STRING(${1:iValue})"
+    },
+    {
+      "label": "INT_TO_REAL",
+      "kind": "function",
+      "detail": "INT_TO_REAL(IN : INT) : REAL",
+      "insertText": "INT_TO_REAL(${1:iValue})"
+    },
+    {
+      "label": "REAL_TO_INT",
+      "kind": "function",
+      "detail": "REAL_TO_INT(IN : REAL) : INT",
+      "insertText": "REAL_TO_INT(${1:rValue})"
+    },
+    {
+      "label": "STRING_TO_INT",
+      "kind": "function",
+      "detail": "STRING_TO_INT(IN : STRING) : INT",
+      "insertText": "STRING_TO_INT(IN := ${1:sText})"
+    },
+    {
+      "label": "TON",
+      "kind": "efb",
+      "detail": "EFB 类型：先声明实例，再按 实例(IN := ..., PT := t#2s) 调用",
+      "insertText": "TON",
+      "parameters": ["IN", "PT"],
+      "outputs": ["Q", "ET"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=358"
+    },
+    {
+      "label": "TOF",
+      "kind": "efb",
+      "detail": "EFB 类型：先声明实例，再按 实例(IN := ..., PT := t#2s) 调用",
+      "insertText": "TOF",
+      "parameters": ["IN", "PT"],
+      "outputs": ["Q", "ET"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=356"
+    },
+    {
+      "label": "TP",
+      "kind": "efb",
+      "detail": "EFB 类型：先声明实例，再按 实例(IN := ..., PT := t#2s) 调用",
+      "insertText": "TP",
+      "parameters": ["IN", "PT"],
+      "outputs": ["Q", "ET"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=360"
+    },
+    {
+      "label": "R_TRIG",
+      "kind": "efb",
+      "detail": "EFB 类型：先声明实例，再按 实例(CLK := ...) 调用",
+      "insertText": "R_TRIG",
+      "parameters": ["CLK"],
+      "outputs": ["Q"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=206"
+    },
+    {
+      "label": "F_TRIG",
+      "kind": "efb",
+      "detail": "EFB 类型：先声明实例，再按 实例(CLK := ...) 调用",
+      "insertText": "F_TRIG",
+      "parameters": ["CLK"],
+      "outputs": ["Q"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=198"
+    },
+    {
+      "label": "SR",
+      "kind": "efb",
+      "detail": "EFB 类型：置位优先双稳态，实例(S1 := ..., R := ...)",
+      "insertText": "SR",
+      "parameters": ["S1", "R"],
+      "outputs": ["Q1"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=226"
+    },
+    {
+      "label": "RS",
+      "kind": "efb",
+      "detail": "EFB 类型：复位优先双稳态，实例(S := ..., R1 := ...)",
+      "insertText": "RS",
+      "parameters": ["S", "R1"],
+      "outputs": ["Q1"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=218"
+    },
+    {
+      "label": "CTU",
+      "kind": "efb",
+      "detail": "EFB 类型：加计数器，实例(CU := ..., R := ..., PV := ...)",
+      "insertText": "CTU",
+      "parameters": ["CU", "R", "PV"],
+      "outputs": ["Q", "CV"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=350"
+    },
+    {
+      "label": "CTD",
+      "kind": "efb",
+      "detail": "EFB 类型：减计数器，实例(CD := ..., LD := ..., PV := ...)",
+      "insertText": "CTD",
+      "parameters": ["CD", "LD", "PV"],
+      "outputs": ["Q", "CV"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=348"
+    },
+    {
+      "label": "CTUD",
+      "kind": "efb",
+      "detail": "EFB 类型：加减计数器，实例(CU := ..., CD := ..., R := ..., LD := ..., PV := ...)",
+      "insertText": "CTUD",
+      "parameters": ["CU", "CD", "R", "LD", "PV"],
+      "outputs": ["QU", "QD", "CV"],
+      "source": "https://download.se.com/files?p_Doc_Ref=33002519K01000&p_File_Name=33002519_K01_000_20.pdf#page=352"
+    }
+  ]
+}

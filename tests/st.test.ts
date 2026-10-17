@@ -160,6 +160,11 @@ describe('stripVarBlocks', () => {
 })
 
 describe('extractRawCalls', () => {
+  it('recognizes official operator function forms without counting infix operators', () => {
+    const calls = extractRawCalls('x := AND(a, b); y := a AND (b); z := MOD(a, b); q := NOT(x); IF (q) THEN END_IF;')
+    expect(calls.map(call => call.name)).toEqual(['AND', 'MOD', 'NOT'])
+    expect(extractRawCalls('x := a AND (matrix[i,j] > 0);')).toEqual([])
+  })
   it('finds calls outside comments and strings and skips keywords', () => {
     const source = [
       '(* ghostCall( *)',

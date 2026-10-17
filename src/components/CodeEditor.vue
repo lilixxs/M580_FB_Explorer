@@ -2,8 +2,10 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import type * as Monaco from 'monaco-editor'
 import { Button as TButton, Input as TInput } from 'tdesign-vue-next'
+import FunctionCallDialog from './FunctionCallDialog.vue'
 import {
   formatActiveSection,
+  linkEditorVariable,
   saveActiveSection,
   setActiveSource,
   setStatus
@@ -18,6 +20,8 @@ import {
   ST_KEYWORDS
 } from '../core/st'
 import type { SnippetKind } from '../core/st'
+import { findVariableReferenceAt } from '../core/variableReferences'
+import type { CallInsertPayload } from '../core/functionLibrary'
 import { state } from '../store'
 import type { ProgramSection } from '../types'
 
@@ -40,6 +44,7 @@ const editorRef = shallowRef<Monaco.editor.IStandaloneCodeEditor | null>(null)
 /** Disposables owned by this component instance; every one is released in onBeforeUnmount. */
 let completionDisposable: Monaco.IDisposable | null = null
 let formattingDisposable: Monaco.IDisposable | null = null
+let mouseDisposable: Monaco.IDisposable | null = null
 let actionDisposables: Monaco.IDisposable[] = []
 let decorations: Monaco.editor.IEditorDecorationsCollection | null = null
 let matches: Monaco.editor.FindMatch[] = []
@@ -67,8 +72,22 @@ const matchInfo = computed(() => {
   return `${matchIndex.value + 1}/${matchTotal.value}`
 })
 
-const dirty = computed(() => state.dirty && state.activeSectionId === props.section.id)
+const dirty = computed(() => Boolean(state.dirtySections[props.section.id]))
 const canSave = computed(() => !loading.value && (isSt.value || Object.keys(state.dirtySections).length > 0))
+
+/**
+ * True once a write target exists: the Monaco editor, or the fallback textarea.
+ *
+ * While `loading` is true both are null and an insert would be written past the end of the source
+ * with no visible anchor, so every write entry point checks this first.
+ */
+function sourceTargetReady(): boolean {
+  return !loading.value && (editorRef.value !== null || fallbackArea.value !== null)
+}
+
+function warnNotReady(): void {
+  setStatus('编辑器尚未就绪，请稍候再操作', 'warning')
+}
 
 function registerLanguage(monaco: typeof Monaco): void {
   const known = monaco.languages.getLanguages().some((language) => language.id === 'st')
@@ -308,11 +327,19 @@ function addEditorActions(monaco: typeof Monaco, editor: Monaco.editor.IStandalo
       run: () => insertSnippet('WHILE')
     },
     {
+      id: 'm580.call',
+      label: 'M580：函数/功能块调用',
+      contextMenuGroupId: 'm580',
+      contextMenuOrder: 7,
+      precondition: '!editorReadonly',
+      run: () => openCallDialog()
+    },
+    {
       id: 'm580.save',
       label: 'M580：保存并重新解析',
       keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
       contextMenuGroupId: 'm580',
-      contextMenuOrder: 7,
+      contextMenuOrder: 8,
       run: () => onSave()
     }
   ]
@@ -351,12 +378,16 @@ function createEditor(monaco: typeof Monaco): void {
   editor.onDidChangeModelContent(() => {
     if (syncing) return
     setActiveSource(editor.getValue())
-    matchTotal.value = 0
-    matchIndex.value = -1
-    clearMatchDecorations()
+    // Editing, inserting a snippet or inserting a call invalidates every cached match range.
+    invalidateMatches()
   })
   editor.onDidChangeCursorPosition((event) => {
     cursorText.value = `行 ${event.position.lineNumber} : 列 ${event.position.column}`
+  })
+  // Clicking a variable token links the panel selection; it never moves the caret itself.
+  mouseDisposable?.dispose()
+  mouseDisposable = editor.onMouseDown((event) => {
+    if (event.target.position) linkVariableAt(event.target.position)
   })
   addEditorActions(monaco, editor)
   registerCompletions(monaco)
@@ -392,9 +423,6 @@ onMounted(async () => {
     await nextTick()
     if (unmounted || generation !== loadGeneration) return
     createEditor(monaco)
-    if (state.jump && state.jump.sectionId === props.section.id) {
-      revealLine(state.jump.line, state.jump.column)
-    }
   } catch (error) {
     if (unmounted) return
     fallback.value = true
@@ -402,7 +430,21 @@ onMounted(async () => {
   } finally {
     if (!unmounted) loading.value = false
   }
+  if (unmounted || generation !== loadGeneration) return
+  // The pending jump is applied on both paths: after a successful load it reaches the Monaco
+  // editor, after a failed load it reaches the fallback textarea, which only exists once the
+  // `fallback` flag has rendered past `loading`.
+  await nextTick()
+  if (unmounted || generation !== loadGeneration) return
+  applyPendingJump()
 })
+
+/** Reveal the jump request that was issued before this editor instance finished loading. */
+function applyPendingJump(): void {
+  const jump = state.jump
+  if (!jump || jump.sectionId !== props.section.id) return
+  revealLine(jump.line, jump.column)
+}
 
 onBeforeUnmount(() => {
   unmounted = true
@@ -411,6 +453,8 @@ onBeforeUnmount(() => {
   actionDisposables = []
   formattingDisposable?.dispose()
   formattingDisposable = null
+  mouseDisposable?.dispose()
+  mouseDisposable = null
   completionDisposable?.dispose()
   completionDisposable = null
   decorations?.clear()
@@ -479,6 +523,21 @@ function focusField(target: unknown, field: 'find' | 'goto'): void {
 
 function clearMatchDecorations(): void {
   decorations?.clear()
+}
+
+/**
+ * Drop every cached match.
+ *
+ * Called on any content change: a `FindMatch` carries absolute offsets, so a cache taken before
+ * an edit would make `replaceCurrent` rewrite the wrong range.
+ */
+function invalidateMatches(): void {
+  matches = []
+  fallbackMatches.value = []
+  fallbackMatchIndex = 0
+  matchTotal.value = 0
+  matchIndex.value = -1
+  clearMatchDecorations()
 }
 
 function focusMatch(): void {
@@ -564,12 +623,13 @@ function replaceCurrent(): void {
     runFallbackFind()
     return
   }
-  if (matches.length === 0) {
+  // Only a match cached for the current content may be replaced; anything else re-searches first.
+  const current = matchIndex.value >= 0 && matchIndex.value < matches.length ? matches[matchIndex.value] : null
+  if (!current) {
     runFind(true)
     return
   }
-  const index = Math.min(Math.max(0, matchIndex.value), matches.length - 1)
-  editor.executeEdits('m580-replace', [{ range: matches[index].range, text: replaceQuery.value }])
+  editor.executeEdits('m580-replace', [{ range: current.range, text: replaceQuery.value }])
   editor.pushUndoStop()
   runFind(false)
 }
@@ -661,6 +721,11 @@ function caretOffsetFor(bodyOffset: number, lfText: string, eol: string): number
 
 function insertSnippet(kind: SnippetKind): void {
   if (isReadOnly.value) return
+  // Without a ready target the insert would silently land at the end of the source.
+  if (!sourceTargetReady()) {
+    warnNotReady()
+    return
+  }
   const editor = editorRef.value
   if (!editor) {
     insertFallbackSnippet(kind)
@@ -690,6 +755,139 @@ function insertSnippet(kind: SnippetKind): void {
 function onSave(): void {
   if (!isSt.value && Object.keys(state.dirtySections).length === 0) return
   saveActiveSection()
+}
+
+/* ---------- function / function block call browser ---------- */
+
+const callDialogVisible = ref(false)
+/** Snapshot of the editor range taken when the dialog opened, before any focus change. */
+let callInsertRange: Monaco.IRange | null = null
+/** Snapshot of the fallback textarea selection taken when the dialog opened. */
+let callFallbackRange: { start: number; end: number } | null = null
+
+/** Record the Monaco mouse/cursor position, then open the dialog. */
+function openCallDialog(): void {
+  if (isReadOnly.value) return
+  if (!sourceTargetReady()) {
+    warnNotReady()
+    return
+  }
+  const editor = editorRef.value
+  if (editor) {
+    const selection = editor.getSelection()
+    const position = editor.getPosition()
+    callInsertRange = selection
+      ? {
+          startLineNumber: selection.startLineNumber,
+          startColumn: selection.startColumn,
+          endLineNumber: selection.endLineNumber,
+          endColumn: selection.endColumn
+        }
+      : position
+        ? {
+            startLineNumber: position.lineNumber,
+            startColumn: position.column,
+            endLineNumber: position.lineNumber,
+            endColumn: position.column
+          }
+        : null
+    callFallbackRange = null
+  } else {
+    const area = fallbackArea.value
+    callInsertRange = null
+    callFallbackRange = area ? { start: area.selectionStart, end: area.selectionEnd } : null
+  }
+  callDialogVisible.value = true
+}
+
+function onCallInsert(payload: CallInsertPayload): void {
+  if (isReadOnly.value) return
+  if (!sourceTargetReady()) {
+    warnNotReady()
+    return
+  }
+  const editor = editorRef.value
+  const model = editor?.getModel() ?? null
+  if (editor && model) {
+    const range = callInsertRange ?? editor.getSelection()
+    if (!range) return
+    const eol = modelEol(model)
+    const source = model.getValue()
+    const endOffset = model.getOffsetAt({ lineNumber: range.endLineNumber, column: range.endColumn })
+    const text = avoidDoubleSemicolon(payload.text.split('\n').join(eol), source, endOffset)
+    editor.executeEdits('m580-call', [{ range, text, forceMoveMarkers: true }])
+    editor.pushUndoStop()
+    editor.focus()
+  } else {
+    const source = props.section.stSource
+    const range = callFallbackRange ?? { start: source.length, end: source.length }
+    const text = avoidDoubleSemicolon(payload.text, source, range.end)
+    setActiveSource(`${source.slice(0, range.start)}${text}${source.slice(range.end)}`)
+    invalidateMatches()
+    nextTick(() => {
+      const caret = range.start + text.length
+      fallbackArea.value?.setSelectionRange(caret, caret)
+      fallbackArea.value?.focus()
+    })
+  }
+  if (payload.kind === 'efb') {
+    setStatus(`已插入 ${payload.label} 实例调用；输出请按该功能块的声明读取`, 'info')
+  } else {
+    setStatus(`已插入 ${payload.label} 调用；保存后写回交换文件`, 'info')
+  }
+  callDialogVisible.value = false
+}
+
+/**
+ * Keep a statement terminated exactly once.
+ *
+ * EFB calls are ST statements and end with `;`; when the caret already sits right before a `;`
+ * the existing one is reused instead of producing `;;`.
+ */
+function avoidDoubleSemicolon(text: string, source: string, endOffset: number): string {
+  if (!text.endsWith(';')) return text
+  let cursor = endOffset
+  while (cursor < source.length && (source[cursor] === ' ' || source[cursor] === '\t')) cursor += 1
+  return source[cursor] === ';' ? text.slice(0, -1) : text
+}
+
+/* ---------- editor token → variable selection link ---------- */
+
+/** Upper case names of every declared variable; drives the click lookup. */
+const declaredVariableNames = computed(() => {
+  const names = new Set<string>()
+  for (const variable of state.doc?.variables ?? []) {
+    const key = variable.name.trim().toUpperCase()
+    if (key) names.add(key)
+  }
+  return names
+})
+
+/**
+ * Select the variable under a mouse click inside the editor.
+ *
+ * The lookup runs through `extractVariableReferences`, so members (`tonRun.Q`), comments, strings
+ * and typed literals can never match. Nothing here moves the caret or requests a jump, so the
+ * click cannot reposition the cursor and cannot start a watch loop.
+ */
+function linkVariableAt(position: Monaco.Position): void {
+  if (isReadOnly.value) return
+  const model = editorRef.value?.getModel() ?? null
+  if (!model) return
+  const word = model.getWordAtPosition(position)
+  if (!word) return
+  const reference = findVariableReferenceAt(
+    props.section.stSource,
+    declaredVariableNames.value,
+    position.lineNumber,
+    word.startColumn
+  )
+  if (!reference) return
+  const variable = (state.doc?.variables ?? []).find(
+    (item) => item.name.trim().toUpperCase() === reference.name.toUpperCase()
+  )
+  if (!variable) return
+  linkEditorVariable(variable.id)
 }
 
 /* ---------- fallback textarea path ---------- */
@@ -760,9 +958,14 @@ function selectFallbackRange(line: number, column: number): void {
 
 function insertFallbackSnippet(kind: SnippetKind): void {
   const area = fallbackArea.value
+  if (!area) {
+    // Nothing to anchor the insert to; writing at the end of the source would be invisible.
+    warnNotReady()
+    return
+  }
   const source = props.section.stSource
-  const start = area ? area.selectionStart : source.length
-  const end = area ? area.selectionEnd : source.length
+  const start = area.selectionStart
+  const end = area.selectionEnd
   const lineStart = source.lastIndexOf('\n', Math.max(0, start - 1)) + 1
   const indent = /^\s*/.exec(source.slice(lineStart, start))?.[0] ?? ''
   const snippet = buildSnippet(kind, indent)
@@ -773,6 +976,7 @@ function insertFallbackSnippet(kind: SnippetKind): void {
   const text = needsBreak ? `${body}${eol}` : body
   const next = `${source.slice(0, start)}${text}${source.slice(end)}`
   setActiveSource(next)
+  invalidateMatches()
   nextTick(() => {
     const caret = start + caretOffsetFor(snippet.cursorOffset, snippet.text, eol)
     fallbackArea.value?.setSelectionRange(caret, caret)
@@ -782,6 +986,8 @@ function insertFallbackSnippet(kind: SnippetKind): void {
 
 function onFallbackInput(event: Event): void {
   setActiveSource((event.target as HTMLTextAreaElement).value)
+  // The textarea changed: every cached match offset is stale from here on.
+  invalidateMatches()
 }
 
 function stepFallbackMatch(delta: number): void {
@@ -843,11 +1049,11 @@ defineExpose({ revealLine })
         v-model="replaceQuery"
         size="small"
         placeholder="替换为"
-        :disabled="isReadOnly"
+        :disabled="isReadOnly || loading"
         style="width: 140px"
       />
-      <button class="mini-btn" :disabled="isReadOnly" @click="replaceCurrent">替换</button>
-      <button class="mini-btn" :disabled="isReadOnly" @click="replaceAll">全部替换</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" @click="replaceCurrent">替换</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" @click="replaceAll">全部替换</button>
       <span class="sep"></span>
       <TInput
         ref="gotoInputRef"
@@ -860,10 +1066,19 @@ defineExpose({ revealLine })
       />
       <button class="mini-btn" @click="jumpToPosition">跳转</button>
       <span class="sep"></span>
-      <button class="mini-btn" :disabled="isReadOnly" @click="onFormat">格式化</button>
-      <button class="mini-btn" :disabled="isReadOnly" title="插入 IF 语句块" @click="insertSnippet('IF')">IF</button>
-      <button class="mini-btn" :disabled="isReadOnly" title="插入 FOR 循环" @click="insertSnippet('FOR')">FOR</button>
-      <button class="mini-btn" :disabled="isReadOnly" title="插入 WHILE 循环" @click="insertSnippet('WHILE')">WHILE</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" @click="onFormat">格式化</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" title="插入 IF 语句块" @click="insertSnippet('IF')">IF</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" title="插入 FOR 循环" @click="insertSnippet('FOR')">FOR</button>
+      <button class="mini-btn" :disabled="isReadOnly || loading" title="插入 WHILE 循环" @click="insertSnippet('WHILE')">WHILE</button>
+      <span class="sep"></span>
+      <button
+        class="mini-btn"
+        :disabled="isReadOnly || loading"
+        title="打开函数/功能块调用面板并在光标处插入"
+        @click="openCallDialog"
+      >
+        函数/功能块调用
+      </button>
     </div>
 
     <div v-if="loading" class="editor-note">正在加载编辑器…</div>
@@ -883,6 +1098,8 @@ defineExpose({ revealLine })
       @input="onFallbackInput"
       @keydown.ctrl.s.prevent="onSave"
     ></textarea>
+
+    <FunctionCallDialog v-model:visible="callDialogVisible" @insert="onCallInsert" />
   </section>
 </template>
 <style scoped>

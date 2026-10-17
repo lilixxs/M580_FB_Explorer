@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { state } from '../store'
-import { selectVariable } from '../actions'
+import { revealVariable } from '../actions'
 
 const zoom = ref(1)
 const pins = computed(() => state.doc?.variables ?? [])
@@ -32,13 +32,13 @@ const width = computed(() => Math.max(600, blockName.value.length * 9 + 350,
         <path :d="`M 110 64 H 150 M ${width - 150} 64 H ${width - 110}`" class="fb-wire" />
         <text x="162" y="68" class="fb-label">EN</text>
         <text :x="width - 162" y="68" text-anchor="end" class="fb-label">ENO</text>
-        <g v-for="(pin, index) in left" :key="`left-${pin.id}`" :data-pin-id="pin.id" class="fb-pin" tabindex="0" role="button" :aria-label="pin.name" @click="selectVariable(pin.id, true)" @keydown.enter="selectVariable(pin.id, true)">
+        <g v-for="(pin, index) in left" :key="`left-${pin.id}`" :data-pin-id="pin.id" class="fb-pin" :class="{ 'fb-pin--active': pin.id === state.selectedVariableId }" tabindex="0" role="button" :aria-label="pin.name" @click="revealVariable(pin.id)" @keydown.enter="revealVariable(pin.id)">
           <title>{{ pin.name }} : {{ pin.typeName }} — {{ pin.comment }}</title>
           <path :d="`M 52 ${100 + index * 42} H 150`" class="fb-wire" :class="{ 'fb-wire-bidirectional': pin.category === 'IN_OUT' }" />
           <text x="162" :y="103 + index * 42" class="fb-label">{{ pin.name }}</text>
           <text x="162" :y="117 + index * 42" class="fb-type">{{ pin.category === 'IN_OUT' ? '↔ ' : '' }}{{ pin.typeName }}</text>
         </g>
-        <g v-for="(pin, index) in right" :key="`right-${pin.id}`" :data-pin-id="pin.id" class="fb-pin" tabindex="0" role="button" :aria-label="pin.name" @click="selectVariable(pin.id, true)" @keydown.enter="selectVariable(pin.id, true)">
+        <g v-for="(pin, index) in right" :key="`right-${pin.id}`" :data-pin-id="pin.id" class="fb-pin" :class="{ 'fb-pin--active': pin.id === state.selectedVariableId }" tabindex="0" role="button" :aria-label="pin.name" @click="revealVariable(pin.id)" @keydown.enter="revealVariable(pin.id)">
           <title>{{ pin.name }} : {{ pin.typeName }} — {{ pin.comment }}</title>
           <path :d="`M ${width - 150} ${100 + index * 42} H ${width - 52}`" class="fb-wire" :class="{ 'fb-wire-bidirectional': pin.category === 'IN_OUT' }" />
           <text :x="width - 162" :y="103 + index * 42" text-anchor="end" class="fb-label">{{ pin.name }}</text>
