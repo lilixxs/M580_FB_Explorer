@@ -2,6 +2,9 @@
 
 [简体中文](README.md) | [English](README.en.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
+> [!NOTE]
+> 以下の内容は AI による翻訳です。
+
 Schneider M580 Control Expert の交換ファイルをブラウザーで表示、編集するツールです。この README を画面内ヘルプの唯一の本文として使用します。
 
 アプリを開く：<https://lilixxs.github.io/M580_FB_Explorer/>

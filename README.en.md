@@ -2,6 +2,9 @@
 
 [简体中文](README.md) | [English](README.en.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
+> [!NOTE]
+> The following content was translated using AI.
+
 A browser-based viewer and editor for Schneider M580 Control Expert exchange files. This README is also the sole source of in-app help.
 
 Open the application: <https://lilixxs.github.io/M580_FB_Explorer/>
