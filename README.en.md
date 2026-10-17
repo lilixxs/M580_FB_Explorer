@@ -71,6 +71,14 @@ On Windows, browser tests use Microsoft Edge by default. On other platforms, run
 npx playwright install chromium
 ```
 
+## GitHub Pages
+
+The GitHub Actions workflow runs the type check, unit tests, and production build after every push.
+
+After all checks pass, the workflow publishes `dist/` to GitHub Pages.
+
+Site URL: <https://lilixxs.github.io/M580_FB_Explorer/>
+
 ## Screenshots
 
 The bundled demo function block generates the screenshots. The screenshots do not contain user files.

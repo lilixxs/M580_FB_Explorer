@@ -71,6 +71,14 @@ npm run test:e2e
 npx playwright install chromium
 ```
 
+## GitHub Pages
+
+仓库中的 GitHub Actions 会在每次推送后执行类型检查、单元测试和生产构建。
+
+所有检查通过后，工作流会把 `dist/` 发布到 GitHub Pages。
+
+页面地址：<https://lilixxs.github.io/M580_FB_Explorer/>
+
 ## 截图
 
 截图由内置演示功能块生成，不包含用户文件。
